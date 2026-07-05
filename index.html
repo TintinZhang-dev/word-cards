@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WordCards</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- 登录检查 -->
+    <script>
+      if (!localStorage.getItem("wctoken")) {
+        window.location.href = "/login.html";
+      }
+    </script>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <h1>📖 WordCards</h1>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <button id="addBtn">＋ 添加单词</button>
+      <button id="reviewBtn">📋 开始复习</button>
+      <button id="statsBtn" title="统计">📊 统计</button>
+      <button id="settingsBtn" title="设置">⚙️</button>
+    </div>
+
+    <!-- 主内容区：侧边栏 + 卡片区域 -->
+    <main>
+      <aside class="deck-sidebar" id="deckSidebar">
+        <div class="deck-sidebar-header">
+          <h3>📂 卡组</h3>
+          <button id="addDeckBtn" class="deck-add-btn" title="新建卡组">+</button>
+        </div>
+        <div class="deck-list" id="deckList">
+          <!-- 动态渲染 -->
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <!-- 统计 -->
+        <div class="stats" id="stats">共 0 张卡片</div>
+
+        <!-- 搜索栏 -->
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="🔍 搜索单词、翻译或释义..." />
+          <button id="searchClear" class="search-clear hidden">✕</button>
+        </div>
+
+        <!-- 卡片网格 -->
+        <div class="card-grid" id="cardGrid"></div>
+      </div>
+    </main>
+
+    <!-- 统计页面 -->
+    <div class="stats-page" id="statsPage" style="display: none">
+      <div class="stats-page-header">
+        <button class="stats-back-btn" id="statsBackBtn">← 返回</button>
+        <h2>📊 学习统计</h2>
+      </div>
+
+      <div class="stats-overview" id="statsOverview"></div>
+
+      <div class="stats-chart-section">
+        <div class="stats-chart-header">
+          <h3>每日复习记录</h3>
+          <div class="stats-period-toggle">
+            <button class="period-btn active" data-period="7">7 天</button>
+            <button class="period-btn" data-period="30">30 天</button>
+          </div>
+        </div>
+        <div class="stats-chart" id="statsChart"></div>
+      </div>
+    </div>
+
+    <!-- 模态框（新增/编辑单词） -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h2 id="modalTitle">添加单词</h2>
+
+        <label for="modalWord">单词（英文）</label>
+        <input id="modalWord" type="text" placeholder="输入英文单词" />
+
+        <label for="modalTranslation">翻译（中文）</label>
+        <input id="modalTranslation" type="text" placeholder="输入中文翻译" />
+
+        <label for="modalDefinition">释义（选填）</label>
+        <textarea
+          id="modalDefinition"
+          placeholder="输入详细释义或例句"
+        ></textarea>
+
+        <label for="modalDeck">卡组</label>
+        <select id="modalDeck">
+          <option value="">未分类</option>
+        </select>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" id="modalCancel">取消</button>
+          <button class="btn-confirm" id="modalConfirm">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div class="modal-overlay" id="settingsOverlay">
+      <div class="modal">
+        <h2>⚙️ 设置</h2>
+
+        <label for="settingsNewCards">每日新卡片上限</label>
+        <input id="settingsNewCards" type="number" min="0" max="100" value="10" />
+
+        <div class="modal-actions">
+          <button class="btn-cancel" id="settingsCancel">取消</button>
+          <button class="btn-confirm" id="settingsSave">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 复习模式 -->
+    <div class="review-container" id="reviewContainer" style="display: none">
+      <div class="review-header">
+        <button class="review-exit-btn" id="reviewExitBtn">✕ 退出复习</button>
+        <div class="review-queue-stats" id="reviewQueueStats"></div>
+        <div class="review-progress" id="reviewProgress">0 / 0</div>
+      </div>
+
+      <div class="review-stage">
+        <div class="review-progress-bar"><div class="fill" id="reviewProgressFill" style="width:0%"></div></div>
+        <div class="review-card-scene">
+          <div class="review-card" id="reviewCard">
+            <div class="review-card-front">
+              <div class="word" id="reviewWord"></div>
+              <div class="hint">点击翻转查看答案</div>
+            </div>
+            <div class="review-card-back">
+              <div class="review-learning-step" id="reviewLearningStep" style="display:none"></div>
+              <div class="translation" id="reviewTranslation"></div>
+              <div class="definition" id="reviewDefinition"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-actions" id="reviewActions" style="display: none">
+          <button id="btnAgain" class="grade-btn grade-again">
+            <span class="grade-text">完全忘了</span>
+            <kbd class="grade-key">1</kbd>
+          </button>
+          <button id="btnHard" class="grade-btn grade-hard">
+            <span class="grade-text">有点难</span>
+            <kbd class="grade-key">2</kbd>
+          </button>
+          <button id="btnGood" class="grade-btn grade-good">
+            <span class="grade-text">记住了</span>
+            <kbd class="grade-key">3</kbd>
+          </button>
+          <button id="btnEasy" class="grade-btn grade-easy">
+            <span class="grade-text">超简单</span>
+            <kbd class="grade-key">4</kbd>
+          </button>
+        </div>
+      </div>
+
+      <div class="review-complete" id="reviewComplete" style="display: none">
+        <div class="complete-icon">🎉</div>
+        <h2>复习完成！</h2>
+        <p id="reviewSummary"></p>
+        <button class="review-back-btn" id="reviewBackBtn">返回卡片列表</button>
+      </div>
+    </div>
+
+    <footer>点击卡片翻转查看释义</footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WordCards — 登录</title>
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body>
+    <div class="login-container">
+      <h1>📖 WordCards</h1>
+
+      <!-- Tab 切换 -->
+      <div class="login-tabs">
+        <button class="login-tab active" data-tab="login">登录</button>
+        <button class="login-tab" data-tab="register">注册</button>
+      </div>
+
+      <!-- 登录表单 -->
+      <form class="login-form active" id="loginForm">
+        <label for="loginEmail">邮箱</label>
+        <input id="loginEmail" type="email" placeholder="your@email.com" autocomplete="email" />
+
+        <label for="loginPassword">密码</label>
+        <input id="loginPassword" type="password" placeholder="输入密码" autocomplete="current-password" />
+
+        <div class="login-error" id="loginError"></div>
+
+        <button class="login-btn" id="loginBtn" type="submit">
+          <span class="login-btn-text">登 录</span>
+          <span class="login-btn-spinner" style="display:none">⏳</span>
+        </button>
+      </form>
+
+      <!-- 注册表单 -->
+      <form class="login-form" id="registerForm">
+        <label for="registerEmail">邮箱</label>
+        <input id="registerEmail" type="email" placeholder="your@email.com" autocomplete="email" />
+
+        <label for="registerPassword">密码</label>
+        <input id="registerPassword" type="password" placeholder="至少 6 位" autocomplete="new-password" />
+
+        <div class="login-error" id="registerError"></div>
+
+        <button class="login-btn" id="registerBtn" type="submit">
+          <span class="login-btn-text">注 册</span>
+          <span class="login-btn-spinner" style="display:none">⏳</span>
+        </button>
+      </form>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+      // ---- Tab 切换 ----
+      const tabs = document.querySelectorAll(".login-tab");
+      const forms = document.querySelectorAll(".login-form");
+
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          const target = tab.dataset.tab;
+          tabs.forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          forms.forEach(f => f.classList.remove("active"));
+          document.getElementById(target === "login" ? "loginForm" : "registerForm").classList.add("active");
+          // 清除错误
+          document.getElementById("loginError").textContent = "";
+          document.getElementById("registerError").textContent = "";
+        });
+      });
+
+      // ---- 登录 ----
+      document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        const errEl = document.getElementById("loginError");
+        const btn = document.getElementById("loginBtn");
+        const btnText = btn.querySelector(".login-btn-text");
+        const btnSpinner = btn.querySelector(".login-btn-spinner");
+
+        if (!email || !password) {
+          errEl.textContent = "请填写邮箱和密码";
+          return;
+        }
+
+        errEl.textContent = "";
+        btn.disabled = true;
+        btnText.style.display = "none";
+        btnSpinner.style.display = "inline";
+
+        try {
+          const data = await API.login(email, password);
+          API.setToken(data.token);
+          API.setUser(data.user);
+          window.location.href = "/index.html";
+        } catch (err) {
+          errEl.textContent = err.message;
+        } finally {
+          btn.disabled = false;
+          btnText.style.display = "inline";
+          btnSpinner.style.display = "none";
+        }
+      });
+
+      // ---- 注册 ----
+      document.getElementById("registerForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+        const errEl = document.getElementById("registerError");
+        const btn = document.getElementById("registerBtn");
+        const btnText = btn.querySelector(".login-btn-text");
+        const btnSpinner = btn.querySelector(".login-btn-spinner");
+
+        if (!email || !password) {
+          errEl.textContent = "请填写邮箱和密码";
+          return;
+        }
+        if (password.length < 6) {
+          errEl.textContent = "密码至少 6 位";
+          return;
+        }
+
+        errEl.textContent = "";
+        btn.disabled = true;
+        btnText.style.display = "none";
+        btnSpinner.style.display = "inline";
+
+        try {
+          const data = await API.register(email, password);
+          API.setToken(data.token);
+          API.setUser(data.user);
+          window.location.href = "/index.html";
+        } catch (err) {
+          errEl.textContent = err.message;
+        } finally {
+          btn.disabled = false;
+          btnText.style.display = "inline";
+          btnSpinner.style.display = "none";
+        }
+      });
+
+      // ---- 回车提交 ----
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const activeForm = document.querySelector(".login-form.active");
+          if (activeForm) activeForm.dispatchEvent(new Event("submit"));
+        }
+      });
+    </script>
+  </body>
+</html>
