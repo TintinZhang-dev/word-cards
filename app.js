@@ -57,9 +57,29 @@ const DEFAULT_WORDS = [
   { id: 50, word: "synthesize", translation: "综合", definition: "将不同元素组合成一个整体", deckId: 3 },
 ];
 
+// ---- localStorage key 常量 ----
+const WORDS_KEY        = "wordcards_words";
+const DECKS_KEY        = "wordcards_decks";
+const REVIEW_KEY       = "wordcards_review";
+const SETTINGS_KEY     = "wordcards_settings";
+const NEW_USED_KEY     = "wordcards_new_used";
+const REVIEW_USED_KEY  = "wordcards_review_used";
+const HISTORY_KEY      = "wordcards_history";
+const IGNORE_KEY       = "wordcards_ignore_words";
+const STREAK_KEY       = "wordcards_streak";
 const MIGRATION_DONE_KEY = "wordcards_migrated";
-const STORAGE_KEY = "wordcards_words";   // 保留用于数据迁移
-const DECKS_KEY = "wordcards_decks";     // 保留用于数据迁移
+
+// 向后兼容别名
+const STORAGE_KEY = WORDS_KEY;
+
+// ---- 离线模式 localStorage 读写 ----
+function saveWordsLocal()   { localStorage.setItem(WORDS_KEY, JSON.stringify(words)); }
+function saveDecksLocal()   { localStorage.setItem(DECKS_KEY, JSON.stringify(decks)); }
+function saveReviewLocal()  { localStorage.setItem(REVIEW_KEY, JSON.stringify(reviewData)); }
+function loadReviewLocal() {
+  try { return JSON.parse(localStorage.getItem(REVIEW_KEY) || "{}"); }
+  catch { return {}; }
+}
 
 // ---------- Toast 提示 ----------
 function showToast(message, type = "info") {
@@ -107,8 +127,6 @@ const modalConfirm = document.getElementById("modalConfirm");
 let editingId = null; // null = 新增模式，数字 = 编辑模式
 
 // ---------- 连续学习天数 ----------
-const STREAK_KEY = "wordcards_streak";
-
 function getStreak() {
   try {
     return JSON.parse(localStorage.getItem(STREAK_KEY) || '{}');
@@ -139,10 +157,45 @@ function updateStreak() {
   return data.count || 0;
 }
 
+// ---------- 用户状态 ----------
+function updateUserStatus() {
+  const statusText = document.getElementById("userStatusText");
+  const loginBtn = document.getElementById("headerLoginBtn");
+  const logoutBtn = document.getElementById("headerLogoutBtn");
+  if (!statusText) return;
+
+  const user = API.getUser();
+  if (user && API.getToken()) {
+    statusText.textContent = `🌐 ${user.email}`;
+    if (loginBtn) loginBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "inline";
+  } else {
+    statusText.textContent = "🌐 未登录";
+    if (loginBtn) loginBtn.style.display = "inline";
+    if (logoutBtn) logoutBtn.style.display = "none";
+  }
+}
+
 // ---------- 初始化 ----------
 async function init() {
   await initApp();
   loadSettings();
+  updateUserStatus();
+
+  // 登录/退出按钮事件
+  const headerLoginBtn = document.getElementById("headerLoginBtn");
+  const headerLogoutBtn = document.getElementById("headerLogoutBtn");
+  if (headerLoginBtn) {
+    headerLoginBtn.addEventListener("click", () => {
+      window.location.href = "/login.html";
+    });
+  }
+  if (headerLogoutBtn) {
+    headerLogoutBtn.addEventListener("click", () => {
+      API.clearToken();
+      window.location.reload();
+    });
+  }
 
   // 添加导入文章按钮到工具栏
   const importBtn = document.createElement("button");
@@ -182,34 +235,37 @@ async function init() {
 
 async function initApp() {
   try {
-    const [wordsData, decksData] = await Promise.all([
-      API.getWords(),
-      API.getDecks(),
-    ]);
-    words = wordsData;
-    // API 返回 deck_id 字段，前端内部用 deckId
+    const data = await DataLayer.loadAll();
+    words = data.words || [];
+    // 在线模式：API 返回 deck_id 字段映射到 deckId
     for (const w of words) {
-      w.deckId = w.deck_id;
+      if (w.deck_id !== undefined) w.deckId = w.deck_id;
     }
-    decks = decksData;
+    decks = data.decks || [];
 
     // 计算 nextId
     nextId = words.length > 0 ? Math.max(...words.map(w => w.id)) + 1 : 1;
     nextDeckId = decks.length > 0 ? Math.max(...decks.map(d => d.id)) + 1 : 1;
 
-    // 初始化复习数据（从 API 返回的字段构建）
+    // 加载复习数据
     reviewData = {};
-    for (const w of words) {
-      if (w.card_state !== undefined) {
-        reviewData[w.id] = {
-          nextReview: w.next_review || null,
-          interval: w.interval || 0,
-          reps: w.reps || 0,
-          ef: w.ef || 2.5,
-          cardState: w.card_state || "new",
-          learningStep: w.learning_step || 0,
-        };
+    if (DataLayer.isOnline) {
+      // 在线模式：从 API 返回的字段构建
+      for (const w of words) {
+        if (w.card_state !== undefined) {
+          reviewData[w.id] = {
+            nextReview: w.next_review || null,
+            interval: w.interval || 0,
+            reps: w.reps || 0,
+            ef: w.ef || 2.5,
+            cardState: w.card_state || "new",
+            learningStep: w.learning_step || 0,
+          };
+        }
       }
+    } else {
+      // 离线模式：从 localStorage 加载
+      reviewData = loadReviewLocal();
     }
 
     renderDeckSidebar();
@@ -259,7 +315,7 @@ async function migrateLegacyData() {
     const deckIdMap = {}; // 旧 id → 新 id
     if (legacyDecks && legacyDecks.length > 0) {
       for (const deck of legacyDecks) {
-        const created = await API.addDeck(deck.name);
+        const created = await DataLayer.addDeck(deck.name);
         deckIdMap[deck.id] = created.id;
       }
     }
@@ -268,7 +324,7 @@ async function migrateLegacyData() {
     if (legacyWords && legacyWords.length > 0) {
       for (const w of legacyWords) {
         const newDeckId = w.deckId ? (deckIdMap[w.deckId] || null) : null;
-        await API.addWord(w.word, w.translation, w.definition || "", newDeckId);
+        await DataLayer.addWord(w.word, w.translation, w.definition || "", newDeckId);
       }
     }
 
@@ -423,7 +479,7 @@ async function renameDeck(deckId) {
   const name = prompt("重命名卡组：", deck.name);
   if (name && name.trim() && name.trim() !== deck.name) {
     try {
-      await API.updateDeck(deckId, name.trim());
+      await DataLayer.updateDeck(deckId, name.trim());
       deck.name = name.trim();
       renderDeckSidebar();
       renderGrid();
@@ -437,7 +493,7 @@ async function deleteDeck(deckId) {
   if (!confirm("确定删除「" + (decks.find(d => d.id === deckId)?.name || "") + "」？\n该卡组中的单词将移回「未分类」。")) return;
 
   try {
-    await API.deleteDeck(deckId);
+    await DataLayer.deleteDeck(deckId);
 
     for (const w of words) {
       if ((w.deckId === undefined ? null : w.deckId) === deckId) {
@@ -576,7 +632,7 @@ function escapeHtml(text) {
 // ---------- 增删改 ----------
 async function addWord(word, translation, definition, deckId) {
   try {
-    const created = await API.addWord(word, translation, definition, deckId);
+    const created = await DataLayer.addWord(word, translation, definition, deckId);
     words.push({ ...created, deckId: created.deck_id });
     renderDeckSidebar();
     renderGrid();
@@ -589,7 +645,7 @@ async function addWord(word, translation, definition, deckId) {
 
 async function updateWord(id, word, translation, definition, deckId) {
   try {
-    const updated = await API.updateWord(id, word, translation, definition, deckId);
+    const updated = await DataLayer.updateWord(id, word, translation, definition, deckId);
     const idx = words.findIndex(w => w.id === id);
     if (idx !== -1) {
       words[idx] = { ...updated, deckId: updated.deck_id };
@@ -605,7 +661,7 @@ async function updateWord(id, word, translation, definition, deckId) {
 async function deleteWord(id) {
   if (!confirm("确定删除这张卡片？")) return;
   try {
-    await API.deleteWord(id);
+    await DataLayer.deleteWord(id);
     words = words.filter(w => w.id !== id);
     delete reviewData[id];
     renderDeckSidebar();
@@ -689,7 +745,7 @@ if (addDeckBtn) {
     const name = prompt("请输入新卡组名称：");
     if (name && name.trim()) {
       try {
-        const created = await API.addDeck(name.trim());
+        const created = await DataLayer.addDeck(name.trim());
         decks.push(created);
         renderDeckSidebar();
       } catch (err) {
@@ -716,11 +772,6 @@ modalOverlay.addEventListener("keydown", (e) => {
    复习数据 & 学习模式
    =============================== */
 
-const SETTINGS_KEY = "wordcards_settings";
-const NEW_USED_KEY = "wordcards_new_used";
-const REVIEW_USED_KEY = "wordcards_review_used";
-const HISTORY_KEY = "wordcards_history";
-
 // SM-2 等级映射：按钮 → 实际评分
 const GRADE_MAP = { again: 0, hard: 1, good: 3, easy: 5 };
 
@@ -733,6 +784,140 @@ let reviewSessionCount = 0; // 本次复习完成的卡片数
 let reviewStartTime = null; // 复习开始时间
 let gradeDistribution = { again: 0, hard: 0, good: 0, easy: 0 }; // 评分分布
 let settings = { newCardsPerDay: 10, reviewCardsPerDay: 50, deckOverrides: {}, defLang: "en" };
+
+// ---- 双模式数据层（在线 / 离线）----
+const DataLayer = {
+  get isOnline() { return !!localStorage.getItem("wctoken"); },
+
+  async loadAll() {
+    if (this.isOnline) {
+      const [wordsData, decksData] = await Promise.all([
+        API.getWords(), API.getDecks()
+      ]);
+      return { words: wordsData, decks: decksData };
+    } else {
+      const w = JSON.parse(localStorage.getItem(WORDS_KEY) || "[]");
+      const d = JSON.parse(localStorage.getItem(DECKS_KEY) || "[]");
+      return { words: w, decks: d };
+    }
+  },
+
+  async addWord(word, translation, definition, deckId) {
+    if (this.isOnline) {
+      return await API.addWord(word, translation, definition, deckId);
+    } else {
+      const newWord = { id: nextId++, word, translation, definition, deckId: deckId || null };
+      words.push(newWord);
+      saveWordsLocal();
+      return newWord;
+    }
+  },
+
+  async updateWord(id, word, translation, definition, deckId) {
+    if (this.isOnline) {
+      return await API.updateWord(id, word, translation, definition, deckId);
+    } else {
+      const idx = words.findIndex(w => w.id === id);
+      if (idx !== -1) {
+        words[idx] = { ...words[idx], word, translation, definition, deckId: deckId || null };
+        saveWordsLocal();
+      }
+    }
+  },
+
+  async deleteWord(id) {
+    if (this.isOnline) {
+      return await API.deleteWord(id);
+    } else {
+      words = words.filter(w => w.id !== id);
+      delete reviewData[id];
+      saveWordsLocal();
+      saveReviewLocal();
+    }
+  },
+
+  async addDeck(name) {
+    if (this.isOnline) {
+      return await API.addDeck(name);
+    } else {
+      const deck = { id: nextDeckId++, name };
+      decks.push(deck);
+      saveDecksLocal();
+      return deck;
+    }
+  },
+
+  async updateDeck(id, name) {
+    if (this.isOnline) {
+      return await API.updateDeck(id, name);
+    } else {
+      const deck = decks.find(d => d.id === id);
+      if (deck) { deck.name = name; saveDecksLocal(); }
+    }
+  },
+
+  async deleteDeck(id) {
+    if (this.isOnline) {
+      return await API.deleteDeck(id);
+    } else {
+      for (const w of words) {
+        if ((w.deckId === undefined ? null : w.deckId) === id) w.deckId = null;
+      }
+      decks = decks.filter(d => d.id !== id);
+      saveWordsLocal();
+      saveDecksLocal();
+    }
+  },
+
+  async getDueCards(params) {
+    if (this.isOnline) {
+      return await API.getDueCards(params);
+    } else {
+      // 离线模式：返回本地 ID 数组（格式与 API 一致）
+      const due = getDueCards();
+      return due.map(wordId => {
+        const w = words.find(w => w.id === wordId);
+        const rd = getReviewData(wordId);
+        return {
+          word_id: wordId,
+          word: w ? w.word : "",
+          translation: w ? w.translation : "",
+          definition: w ? w.definition : "",
+          deck_id: w ? w.deckId : null,
+          card_state: rd.cardState,
+          learning_step: rd.learningStep,
+          reps: rd.reps,
+          interval: rd.interval,
+        };
+      });
+    }
+  },
+
+  async answerCard(wordId, gradeKey) {
+    if (this.isOnline) {
+      return await API.answerCard(wordId, gradeKey);
+    } else {
+      saveReviewLocal();
+    }
+  },
+
+  async extractWords(text, skipExisting) {
+    if (this.isOnline) {
+      return await API.extractWords(text, skipExisting);
+    } else {
+      // 离线模式：使用本地分词逻辑
+      return localExtractWords(text, skipExisting);
+    }
+  },
+
+  async batchAddWords(selectedWords, deckId, defLang) {
+    if (this.isOnline) {
+      return await API.batchAddWords(selectedWords, deckId, defLang);
+    } else {
+      return await localBatchAddWords(selectedWords, deckId, defLang);
+    }
+  },
+};
 
 // DOM 引用 — 复习模式
 const reviewBtn = document.getElementById("reviewBtn");
@@ -825,7 +1010,7 @@ async function fetchDueCards() {
   params.newLimit = getEffectiveLimit(selectedDeckId, "new");
   params.reviewLimit = getEffectiveLimit(selectedDeckId, "review");
 
-  const due = await API.getDueCards(params);
+  const due = await DataLayer.getDueCards(params);
   reviewQueue = due.map(d => d.word_id);
 
   // 从返回数据构建 reviewData
@@ -1137,7 +1322,7 @@ async function answerCard(gradeKey) {
   }
 
   // 异步持久化到后端（不阻塞 UI）
-  API.answerCard(wordId, gradeKey).catch(err => {
+  DataLayer.answerCard(wordId, gradeKey).catch(err => {
     console.error("answerCard API error:", err);
   });
 
@@ -1454,7 +1639,7 @@ async function handleImportData(event) {
           const existing = decks.find(ex => ex.name === d.name);
           if (!existing) {
             try {
-              const created = await API.addDeck(d.name);
+              const created = await DataLayer.addDeck(d.name);
               decks.push(created);
               deckIdMap[d.id] = created.id;
             } catch { /* skip failed deck */ }
@@ -1476,7 +1661,7 @@ async function handleImportData(event) {
               newDeckId = deckIdMap[w.deckId];
             }
             try {
-              const created = await API.addWord(w.word, w.translation || "", w.definition || "", newDeckId);
+              const created = await DataLayer.addWord(w.word, w.translation || "", w.definition || "", newDeckId);
               words.push({ ...created, deckId: created.deck_id });
               added++;
             } catch { skipped++; }
@@ -2042,8 +2227,6 @@ function stem(word) {
 }
 
 // ---------- 自定义忽略列表 ----------
-const IGNORE_KEY = "wordcards_ignore_words";
-
 function loadIgnoreWords() {
   try {
     const stored = localStorage.getItem(IGNORE_KEY);
@@ -2232,6 +2415,131 @@ function handlePdfUpload(event) {
   event.target.value = "";
 }
 
+// ---------- 离线模式：本地词频提取 ----------
+function localExtractWords(text, skipExisting) {
+  const ignoreWords = loadIgnoreWords();
+  const ignoreSet = new Set(ignoreWords.map(w => w.toLowerCase()));
+
+  let rawTokens = text
+    .replace(/[^a-zA-Z]/g, " ")
+    .split(/\s+/)
+    .filter(t => t.length > 2);
+
+  rawTokens = rawTokens.filter(t => !/^\d+$/.test(t));
+  rawTokens = rawTokens.filter(t => {
+    const lower = t.toLowerCase();
+    return !STOP_WORDS.has(lower) && !ignoreSet.has(lower);
+  });
+
+  if (rawTokens.length === 0) return [];
+
+  const freqMap = new Map();
+  for (const t of rawTokens) {
+    const key = t.toLowerCase();
+    if (!freqMap.has(key)) freqMap.set(key, { count: 0, forms: new Map() });
+    const entry = freqMap.get(key);
+    entry.count++;
+    entry.forms.set(t, (entry.forms.get(t) || 0) + 1);
+  }
+
+  const existingSet = new Set();
+  for (const w of words) {
+    const lower = w.word.toLowerCase();
+    existingSet.add(lower);
+    const stemmed = stem(lower);
+    if (stemmed !== lower) existingSet.add(stemmed);
+  }
+
+  const wordList = [];
+  for (const [key, entry] of freqMap) {
+    let displayForm = key;
+    let bestFreq = 0;
+    let hasCapitalized = false, hasLowercase = false;
+    for (const [form, freq] of entry.forms) {
+      const isCap = /^[A-Z]/.test(form);
+      if (isCap && (!hasCapitalized || freq > bestFreq)) {
+        displayForm = form; bestFreq = freq; hasCapitalized = true;
+      } else if (!hasCapitalized && freq > bestFreq) {
+        displayForm = form; bestFreq = freq;
+      }
+      if (!isCap) hasLowercase = true;
+    }
+
+    const matched = existingSet.has(key) || existingSet.has(stem(key));
+    const isProper = hasCapitalized && !hasLowercase && !STOP_WORDS.has(key);
+
+    wordList.push({ word: displayForm, wordLower: key, count: entry.count, length: key.length, exists: matched, isProper });
+  }
+
+  let filtered = skipExisting !== false ? wordList.filter(w => !w.exists) : wordList;
+  if (filtered.length === 0) return [];
+
+  for (const w of filtered) {
+    const lenScore = Math.min(1, w.length / 20);
+    const rarityScore = COMMON_WORDS.has(w.wordLower) ? 0.2 : 1.0;
+    const freshScore = w.exists ? 0 : 1;
+    w.score = lenScore * 0.4 + rarityScore * 0.4 + freshScore * 0.2;
+  }
+  filtered.sort((a, b) => b.score - a.score);
+
+  return filtered.map(w => ({ word: w.word, count: w.count, length: w.length, exists: w.exists, score: w.score, isProper: w.isProper }));
+}
+
+// ---------- 离线模式：本地批量添加 ----------
+async function localBatchAddWords(selectedWords, deckId, defLang) {
+  const results = [];
+  let added = 0, skipped = 0;
+
+  // 单个单词释义获取（离线模式下仅联网获取释义）
+  async function fetchDef(word) {
+    if (defLang === "none") return { translation: "", definition: "" };
+    try {
+      if (defLang === "zh") {
+        const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|zh-CN`);
+        if (!r.ok) return { translation: "", definition: "" };
+        const data = await r.json();
+        const trans = (data.responseData && data.responseData.translatedText) ? data.responseData.translatedText : "";
+        return { translation: trans, definition: "" };
+      } else {
+        const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+        if (!r.ok) return { translation: "", definition: "" };
+        const data = await r.json();
+        if (data && data[0] && data[0].meanings && data[0].meanings[0]) {
+          const def = data[0].meanings[0].definitions[0].definition;
+          return { translation: "", definition: def.charAt(0).toUpperCase() + def.slice(1) };
+        }
+        return { translation: "", definition: "" };
+      }
+    } catch { return { translation: "", definition: "" }; }
+  }
+
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < selectedWords.length; i += BATCH_SIZE) {
+    const batch = selectedWords.slice(i, i + BATCH_SIZE);
+    const defResults = await Promise.allSettled(batch.map(word => fetchDef(word)));
+
+    for (let j = 0; j < batch.length; j++) {
+      const word = batch[j];
+      const existing = words.find(w => w.word.toLowerCase() === word.toLowerCase());
+      if (existing) { skipped++; results.push({ word, skipped: true }); continue; }
+
+      let translation = "", definition = "";
+      if (defResults[j].status === "fulfilled") {
+        translation = defResults[j].value.translation;
+        definition = defResults[j].value.definition;
+      }
+
+      const newWord = { id: nextId++, word, translation, definition, deckId: deckId || null };
+      words.push(newWord);
+      results.push({ word, translation, definition, skipped: false, id: newWord.id });
+      added++;
+    }
+  }
+
+  saveWordsLocal();
+  return { added, skipped, results };
+}
+
 // ---------- 词频提取 ----------
 async function handleExtract() {
   const ta = document.getElementById("importTextarea");
@@ -2257,7 +2565,7 @@ async function handleExtract() {
   }
 
   try {
-    const result = await API.extractWords(text, skipExisting);
+    const result = await DataLayer.extractWords(text, skipExisting);
     extractedWords = result;
     if (extractedWords.length === 0) {
       showToast("未提取到任何新单词", "info");
@@ -2383,7 +2691,7 @@ async function handleBatchAdd() {
   btn.textContent = "⏳ 添加中...";
 
   try {
-    const result = await API.batchAddWords(selectedWords, deckId, defLang);
+    const result = await DataLayer.batchAddWords(selectedWords, deckId, defLang);
 
     // 将新单词加入本地数组
     for (const r of result.results) {

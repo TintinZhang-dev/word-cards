@@ -40,6 +40,46 @@ body {
   scrollbar-color: #333 transparent;
 }
 
+/* 顶部行：标题 + 用户状态 */
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1140px;
+  margin-bottom: 10px;
+  gap: 16px;
+}
+
+.header-row h1 {
+  margin-bottom: 0;
+}
+
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.user-status-btn {
+  padding: 4px 12px;
+  background: transparent;
+  color: #4a9eff;
+  border: 1px solid #2a2a3e;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.user-status-btn:hover {
+  background: #1a2a3e;
+  border-color: #3a3a6e;
+}
+
 h1 {
   font-size: 2rem;
   font-weight: 300;

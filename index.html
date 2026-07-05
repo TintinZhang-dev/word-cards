@@ -7,16 +7,16 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!-- 登录检查 -->
-    <script>
-      if (!localStorage.getItem("wctoken")) {
-        window.location.href = "/login.html";
-      }
-    </script>
-
     <div id="toastContainer" class="toast-container"></div>
 
-    <h1>📖 WordCards</h1>
+    <div class="header-row">
+      <h1>📖 WordCards</h1>
+      <span class="user-status" id="userStatus">
+        <span id="userStatusText">🌐 未登录</span>
+        <button id="headerLoginBtn" class="user-status-btn">登录</button>
+        <button id="headerLogoutBtn" class="user-status-btn" style="display:none">退出</button>
+      </span>
+    </div>
 
     <!-- 工具栏 -->
     <div class="toolbar">

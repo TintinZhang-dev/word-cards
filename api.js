@@ -16,6 +16,11 @@ const API = {
 
   // 通用请求方法
   async request(path, options = {}) {
+    // 没有 token 时快速失败（离线模式）
+    if (!this.getToken()) {
+      throw new Error("未登录");
+    }
+
     const headers = { ...options.headers };
     if (!options.skipContentType) {
       headers["Content-Type"] = "application/json";
