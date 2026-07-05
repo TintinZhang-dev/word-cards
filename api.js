@@ -1,5 +1,5 @@
 const API = {
-  baseUrl: "http://localhost:3001",
+  baseUrl: "https://word-cards-production.up.railway.app",
 
   // Token 管理
   getToken() { return localStorage.getItem("wctoken"); },
