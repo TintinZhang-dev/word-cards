@@ -30,7 +30,10 @@
         <input id="loginEmail" type="email" placeholder="your@email.com" autocomplete="email" />
 
         <label for="loginPassword">密码</label>
-        <input id="loginPassword" type="password" placeholder="输入密码" autocomplete="current-password" />
+        <div class="password-wrapper">
+          <input id="loginPassword" type="password" placeholder="输入密码" autocomplete="current-password" />
+          <button type="button" class="password-toggle" data-target="loginPassword">👁️</button>
+        </div>
 
         <div class="login-error" id="loginError"></div>
 
@@ -46,7 +49,16 @@
         <input id="registerEmail" type="email" placeholder="your@email.com" autocomplete="email" />
 
         <label for="registerPassword">密码</label>
-        <input id="registerPassword" type="password" placeholder="至少 6 位" autocomplete="new-password" />
+        <div class="password-wrapper">
+          <input id="registerPassword" type="password" placeholder="至少 6 位" autocomplete="new-password" />
+          <button type="button" class="password-toggle" data-target="registerPassword">👁️</button>
+        </div>
+
+        <label for="registerPassword2">确认密码</label>
+        <div class="password-wrapper">
+          <input id="registerPassword2" type="password" placeholder="再次输入密码" autocomplete="new-password" />
+          <button type="button" class="password-toggle" data-target="registerPassword2">👁️</button>
+        </div>
 
         <div class="login-error" id="registerError"></div>
 
@@ -90,6 +102,10 @@
           errEl.textContent = "请填写邮箱和密码";
           return;
         }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errEl.textContent = "请输入正确的邮箱格式";
+          return;
+        }
 
         errEl.textContent = "";
         btn.disabled = true;
@@ -110,6 +126,17 @@
         }
       });
 
+      // ---- 密码可见切换 ----
+      document.querySelectorAll(".password-toggle").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const input = document.getElementById(btn.dataset.target);
+          if (!input) return;
+          const isPassword = input.type === "password";
+          input.type = isPassword ? "text" : "password";
+          btn.textContent = isPassword ? "👁️‍🗨️" : "👁️";
+        });
+      });
+
       // ---- 注册 ----
       document.getElementById("registerForm").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -124,8 +151,17 @@
           errEl.textContent = "请填写邮箱和密码";
           return;
         }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errEl.textContent = "请输入正确的邮箱格式";
+          return;
+        }
         if (password.length < 6) {
           errEl.textContent = "密码至少 6 位";
+          return;
+        }
+        const password2 = document.getElementById("registerPassword2").value;
+        if (password !== password2) {
+          errEl.textContent = "两次密码输入不一致";
           return;
         }
 
