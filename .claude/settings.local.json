@@ -3,7 +3,27 @@
     "allow": [
       "Bash(node *)",
       "Bash(npm install *)",
-      "Bash(pkill -f \"node src/index.js\")"
+      "Bash(pkill -f \"node src/index.js\")",
+      "Bash(npm --version)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(apt list *)",
+      "Read(//usr/lib/**)",
+      "Read(//opt/**)",
+      "Read(//home/tintinzhang/**)",
+      "Bash(sudo apt-get update -qq)",
+      "Bash(sudo apt-get install -y openjdk-17-jdk)",
+      "Bash(unzip -o cmdline-tools.zip -d cmdline-tools)",
+      "Bash(sudo apt-get install -y unzip)",
+      "Bash(cd *)",
+      "Bash(npm init *)",
+      "Bash(npx cap *)",
+      "Bash(curl -L -o pdf.min.js \"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js\")",
+      "Bash(export ANDROID_HOME=/home/tintinzhang/Android)",
+      "Bash(export ANDROID_SDK_ROOT=/home/tintinzhang/Android)",
+      "Bash(export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64)",
+      "Bash(chmod +x gradlew)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(sudo apt-get install -y openjdk-21-jdk)"
     ]
   }
 }
