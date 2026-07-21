@@ -1,7 +1,479 @@
 /* ===============================
-   WordCards — Phase 1 + 2 + 3
-   localStorage 持久化 + 单词管理 + SM-2 + 学习模式
+   WordCards — Phase 1 + 2 + 3 + 4
+   localStorage 持久化 + 单词管理 + SM-2 + 学习模式 + 多语言
    =============================== */
+
+// ---- i18n 多语言 ----
+const i18n = {
+  zh: {
+    // 工具栏
+    addWord: "＋ 添加单词",
+    startReview: "📋 开始复习",
+    stats: "📊 统计",
+    settings: "⚙️",
+    importArticle: "📄 导入文章",
+    toggleBrowser: "📋 列表",
+    toggleGrid: "🔲 网格",
+    // 侧边栏
+    allCards: "📚 所有卡片",
+    decks: "📂 卡组",
+    tagsSidebar: "🏷️ 标签",
+    filter: "🔍 筛选",
+    addTag: "+",
+    suspendedFilter: "🚫 已挂起",
+    flaggedFilter: "🚩 有标记",
+    newDeck: "+",
+    noTags: "暂无标签",
+    // 搜索
+    searchPlaceholder: "🔍 搜索单词、翻译或释义...（tag:xxx 按标签过滤）",
+    // 浏览器
+    status: "状态",
+    due: "到期",
+    all: "全部",
+    newCards: "新卡片",
+    learning: "学习中",
+    review: "复习",
+    mastered: "已掌握",
+    today: "今天",
+    tomorrow: "明天",
+    week: "本周",
+    overdue: "过期",
+    none: "无安排",
+    selected: "已选",
+    delete: "🗑️ 删除",
+    moveTo: "📁 移至卡组",
+    addTagShort: "🏷️ 添加标签",
+    suspend: "🚫 挂起",
+    unsuspend: "✅ 恢复",
+    setDifficulty: "📊 批量设置难度",
+    difficulty: "难度",
+    word: "单词",
+    translation: "翻译",
+    deck: "卡组",
+    actions: "操作",
+    // 模态框
+    addWordTitle: "添加单词",
+    editWordTitle: "编辑单词",
+    wordLabel: "单词（英文）",
+    wordPlaceholder: "输入英文单词",
+    translationLabel: "翻译（中文）",
+    translationPlaceholder: "输入中文翻译",
+    definitionLabel: "释义（选填）",
+    definitionPlaceholder: "输入详细释义或例句",
+    deckLabel: "卡组",
+    uncategorized: "未分类",
+    tagsLabel: "🏷️ 标签",
+    difficultyLabel: "📊 难度",
+    easy: "😊 简单",
+    medium: "🤔 中等",
+    hard: "😰 困难",
+    cancel: "取消",
+    confirm: "确认",
+    addTagLabel: "+ 添加标签",
+    noMoreTags: "没有更多标签",
+    // 标签编辑
+    addTagTitle: "🏷️ 添加标签",
+    tagNameLabel: "标签名称",
+    tagNamePlaceholder: "输入标签名称",
+    color: "颜色",
+    save: "保存",
+    // 卡片信息
+    cardInfoTitle: "ℹ️ 卡片信息",
+    basicInfo: "基本信息",
+    reviewStats: "复习统计",
+    reps: "复习次数 (reps)",
+    easeFactor: "难度系数 (EF)",
+    interval: "间隔 (interval)",
+    currentInterval: "当前间隔",
+    nextReviewDate: "下次复习",
+    cardState: "状态",
+    learningStep: "学习步骤",
+    suspendedStatus: "挂起",
+    reviewHistory: "答题历史（最近）",
+    noHistory: "暂无答题记录",
+    difficultySection: "📊 难度",
+    speak: "🔊 朗读",
+    reschedule: "📅 重排",
+    resetCard: "🔄 重置",
+    markMastered: "✅ 设为已掌握",
+    toggleSuspend: "🚫 挂起",
+    toggleUnsuspend: "▶️ 取消挂起",
+    close: "关闭",
+    setFlag: "设置标记",
+    // 卡片状态
+    statusNew: "新",
+    statusLearning: "学习中",
+    statusReview: "复习",
+    statusMastered: "✅",
+    // 复习
+    tapToReveal: "点击翻转查看答案",
+    again: "完全忘了",
+    hardBtn: "有点难",
+    good: "记住了",
+    easyBtn: "超简单",
+    reviewComplete: "🎉 复习完成！",
+    reviewDoneMsg1: "继续加油，下次一定记得更好！",
+    backToList: "返回卡片列表",
+    exitReview: "✕ 退出复习",
+    newCardLabel: "🆕 新卡片",
+    learningLabel: "💛 学习中",
+    reviewLabel: "🔵 复习",
+    masteredLabel: "✅ 已掌握",
+    spaceToFlip: "空格 翻转",
+    keysGrade: "1-4 评分",
+    keySuspend: "S 挂起",
+    keyFlag: "F 标记",
+    keyUndo: "Ctrl+Z 撤销",
+    noDueCards: "所有卡片都已掌握，暂无需要复习的卡片。",
+    // 统计
+    statsTitle: "📊 学习统计",
+    back: "← 返回",
+    cardDistribution: "📊 卡片分布",
+    retentionRate: "📈 保留率",
+    studyTrend: "📉 学习趋势",
+    forecastTitle: "🔮 到期预测",
+    dailyReview: "每日复习记录",
+    hardestCards: "🏆 最难卡片 Top 10",
+    goalAchievement: "🎯 目标达成率",
+    days7: "7 天",
+    days30: "30 天",
+    totalCards: "总卡片",
+    masteredCards: "已掌握",
+    learningCards: "学习中",
+    reviewCards: "复习中",
+    newCardCount: "新卡片",
+    streakLabel: "连续学习",
+    todayRemainingNew: "今日剩余新卡",
+    todayRemainingReview: "今日剩余复习",
+    noReviewData: "暂无复习数据",
+    // 设置
+    settingsTitle: "⚙️ 设置",
+    dailyNewLimit: "每日新卡片上限",
+    dailyReviewLimit: "每日复习上限",
+    dailyLimits: "📊 每日额度",
+    reviewQueueSettings: "🔄 复习队列",
+    newPerReview: "每轮新卡插入数量",
+    dailyGoals: "🎯 每日目标",
+    dailyNewGoal: "每日新卡片目标",
+    dailyReviewGoal: "每日复习目标",
+    dataManagement: "💾 数据管理",
+    exportJson: "📥 导出 JSON",
+    importJson: "📤 导入 JSON",
+    exportCsv: "📊 导出 CSV",
+    importCsv: "📊 导入 CSV",
+    ignoreList: "📝 忽略列表",
+    ignoreListHint: "以下单词导入文章时将自动跳过：",
+    ignorePlaceholder: "输入要忽略的单词",
+    ignoreAdd: "添加",
+    noIgnoreWords: "暂无忽略词",
+    // 设置 - 释义语言
+    defLangLabel: "🌐 导入时自动获取释义",
+    defLangEn: "英文释义（来自 FreeDictionary）",
+    defLangZh: "中文翻译（来自 MyMemory）",
+    defLangNone: "不获取，留空自行填写",
+    defLangHint: "需要联网。英文释义取词典定义，中文翻译取常见译法。",
+    // 设置 - UI 语言
+    uiLanguage: "🌐 界面语言",
+    translationLanguage: "🌐 释义语言",
+    // 导入
+    importTitle: "📄 导入文章提取生词",
+    importPdfBtn: "📎 上传 PDF",
+    importPasteHint: "在此粘贴英文文章，或上传 PDF 自动填入...",
+    importTargetDeck: "目标卡组",
+    importSkipExisting: "跳过已有卡片中的单词",
+    importExtractBtn: "提取生词",
+    importResultTitle: "📊 提取结果",
+    importToggleAll: "全选 / 取消全选",
+    importBack: "返回编辑",
+    importBatchAdd: "批量添加",
+    // 空状态
+    noCards: "还没有单词卡片",
+    addFirstCard: "点击「添加单词」开始创建",
+    noResults: "未找到匹配的单词",
+    noResultsHint: "试试其他关键词或筛选条件",
+    // Toast 消息
+    cardAdded: "卡片已添加",
+    cardUpdated: "卡片已更新",
+    cardDeleted: "卡片已删除",
+    undoDone: "已撤销 ↩️",
+    cardSuspended: "已挂起 🚫",
+    cardUnsuspended: "已恢复 ▶️",
+    flagSet: "标记已设置",
+    flagCleared: "标记已清除",
+    csvExported: "CSV 导出成功 ✅",
+    csvImported: "CSV 导入完成",
+    csvImportCancelled: "CSV 导入已取消",
+    difficultyUpdated: "难度已更新",
+    rescheduled: "已重排",
+    cardReset: "卡片已重置",
+    cardMastered: "已设为已掌握 ✅",
+    deckRenamed: "卡组已重命名",
+    deckDeleted: "卡组已删除",
+    tagCreated: "标签已创建 🏷️",
+    tagDeleted: "标签已删除",
+    batchMoved: "已移动选中卡片",
+    batchTagAdded: "已添加标签",
+    batchSuspended: "已挂起选中卡片",
+    batchUnsuspended: "已恢复选中卡片",
+    batchDifficultySet: "已设置难度",
+    batchDeleted: "已删除选中卡片",
+    noUndo: "没有可撤销的操作",
+    loadFailed: "加载数据失败",
+    addFailed: "添加失败",
+    updateFailed: "更新失败",
+    deleteFailed: "删除失败",
+    importFailed: "导入失败",
+    extractFailed: "提取失败",
+    batchAddFailed: "批量添加失败",
+    renameFailed: "重命名失败",
+    deckDeleteFailed: "删除卡组失败",
+    createDeckFailed: "创建卡组失败",
+    getDueFailed: "获取复习队列失败",
+    migrationDetected: "检测到本地旧数据，正在迁移...",
+    migrationDone: "数据迁移完成！",
+    migrationFailed: "数据迁移失败",
+    importDone: "导入完成",
+    noWordsExtracted: "未提取到任何新单词",
+    wordTranslationRequired: "单词和翻译不能为空",
+    invalidBackup: "无效的备份文件",
+    // 页脚
+    footer: "点击卡片翻转查看释义 · 空格键翻转 · 1-4评分 · S挂起 · F标记 · Ctrl+Z撤销",
+  },
+  en: {
+    // Toolbar
+    addWord: "＋ Add Word",
+    startReview: "📋 Start Review",
+    stats: "📊 Stats",
+    settings: "⚙️",
+    importArticle: "📄 Import Article",
+    toggleBrowser: "📋 List",
+    toggleGrid: "🔲 Grid",
+    // Sidebar
+    allCards: "📚 All Cards",
+    decks: "📂 Decks",
+    tagsSidebar: "🏷️ Tags",
+    filter: "🔍 Filter",
+    addTag: "+",
+    suspendedFilter: "🚫 Suspended",
+    flaggedFilter: "🚩 Flagged",
+    newDeck: "+",
+    noTags: "No tags",
+    // Search
+    searchPlaceholder: "🔍 Search words, translations, or definitions... (tag:xxx to filter)",
+    // Browser
+    status: "Status",
+    due: "Due",
+    all: "All",
+    newCards: "New",
+    learning: "Learning",
+    review: "Review",
+    mastered: "Mastered",
+    today: "Today",
+    tomorrow: "Tomorrow",
+    week: "This Week",
+    overdue: "Overdue",
+    none: "None",
+    selected: "Selected",
+    delete: "🗑️ Delete",
+    moveTo: "📁 Move to Deck",
+    addTagShort: "🏷️ Add Tag",
+    suspend: "🚫 Suspend",
+    unsuspend: "✅ Unsuspend",
+    setDifficulty: "📊 Set Difficulty",
+    difficulty: "Difficulty",
+    word: "Word",
+    translation: "Translation",
+    deck: "Deck",
+    actions: "Actions",
+    // Modals
+    addWordTitle: "Add Word",
+    editWordTitle: "Edit Word",
+    wordLabel: "Word",
+    wordPlaceholder: "Enter English word",
+    translationLabel: "Translation",
+    translationPlaceholder: "Enter translation",
+    definitionLabel: "Definition (optional)",
+    definitionPlaceholder: "Enter detailed definition or example",
+    deckLabel: "Deck",
+    uncategorized: "Uncategorized",
+    tagsLabel: "🏷️ Tags",
+    difficultyLabel: "📊 Difficulty",
+    easy: "😊 Easy",
+    medium: "🤔 Medium",
+    hard: "😰 Hard",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    addTagLabel: "+ Add Tag",
+    noMoreTags: "No more tags",
+    // Tag editing
+    addTagTitle: "🏷️ Add Tag",
+    tagNameLabel: "Tag Name",
+    tagNamePlaceholder: "Enter tag name",
+    color: "Color",
+    save: "Save",
+    // Card info
+    cardInfoTitle: "ℹ️ Card Info",
+    basicInfo: "Basic Info",
+    reviewStats: "Review Stats",
+    reps: "Reviews (reps)",
+    easeFactor: "Ease Factor (EF)",
+    interval: "Interval",
+    currentInterval: "Current Interval",
+    nextReviewDate: "Next Review",
+    cardState: "State",
+    learningStep: "Learning Step",
+    suspendedStatus: "Suspended",
+    reviewHistory: "Review History (recent)",
+    noHistory: "No review history",
+    difficultySection: "📊 Difficulty",
+    speak: "🔊 Speak",
+    reschedule: "📅 Reschedule",
+    resetCard: "🔄 Reset",
+    markMastered: "✅ Mark Mastered",
+    toggleSuspend: "🚫 Suspend",
+    toggleUnsuspend: "▶️ Unsuspend",
+    close: "Close",
+    setFlag: "Set Flag",
+    // Card states
+    statusNew: "New",
+    statusLearning: "Learning",
+    statusReview: "Review",
+    statusMastered: "✅",
+    // Review
+    tapToReveal: "Tap to reveal",
+    again: "Again",
+    hardBtn: "Hard",
+    good: "Good",
+    easyBtn: "Easy",
+    reviewComplete: "🎉 Review Complete!",
+    reviewDoneMsg1: "Keep going, you'll remember better next time!",
+    backToList: "Back to List",
+    exitReview: "✕ Exit Review",
+    newCardLabel: "🆕 New",
+    learningLabel: "💛 Learning",
+    reviewLabel: "🔵 Review",
+    masteredLabel: "✅ Mastered",
+    spaceToFlip: "Space Flip",
+    keysGrade: "1-4 Grade",
+    keySuspend: "S Suspend",
+    keyFlag: "F Flag",
+    keyUndo: "Ctrl+Z Undo",
+    noDueCards: "All cards mastered, no cards to review.",
+    // Stats
+    statsTitle: "📊 Study Stats",
+    back: "← Back",
+    cardDistribution: "📊 Card Distribution",
+    retentionRate: "📈 Retention Rate",
+    studyTrend: "📉 Study Trend",
+    forecastTitle: "🔮 Forecast",
+    dailyReview: "Daily Reviews",
+    hardestCards: "🏆 Hardest Cards Top 10",
+    goalAchievement: "🎯 Goal Achievement",
+    days7: "7 Days",
+    days30: "30 Days",
+    totalCards: "Total",
+    masteredCards: "Mastered",
+    learningCards: "Learning",
+    reviewCards: "Reviewing",
+    newCardCount: "New",
+    streakLabel: "Streak",
+    todayRemainingNew: "New remaining",
+    todayRemainingReview: "Review remaining",
+    noReviewData: "No review data",
+    // Settings
+    settingsTitle: "⚙️ Settings",
+    dailyNewLimit: "Daily New Card Limit",
+    dailyReviewLimit: "Daily Review Limit",
+    dailyLimits: "📊 Daily Limits",
+    reviewQueueSettings: "🔄 Review Queue",
+    newPerReview: "New cards per round",
+    dailyGoals: "🎯 Daily Goals",
+    dailyNewGoal: "Daily New Card Goal",
+    dailyReviewGoal: "Daily Review Goal",
+    dataManagement: "💾 Data Management",
+    exportJson: "📥 Export JSON",
+    importJson: "📤 Import JSON",
+    exportCsv: "📊 Export CSV",
+    importCsv: "📊 Import CSV",
+    ignoreList: "📝 Ignore List",
+    ignoreListHint: "The following words will be skipped during import:",
+    ignorePlaceholder: "Enter word to ignore",
+    ignoreAdd: "Add",
+    noIgnoreWords: "No ignored words",
+    // Settings - translation language
+    defLangLabel: "🌐 Auto-fetch definition on import",
+    defLangEn: "English definition (FreeDictionary)",
+    defLangZh: "Chinese translation (MyMemory)",
+    defLangNone: "Skip, leave blank",
+    defLangHint: "Requires internet. English fetches dictionary definition, Chinese fetches common translation.",
+    // Settings - UI language
+    uiLanguage: "🌐 UI Language",
+    translationLanguage: "🌐 Translation Language",
+    // Import
+    importTitle: "📄 Import Article & Extract Words",
+    importPdfBtn: "📎 Upload PDF",
+    importPasteHint: "Paste an English article here, or upload a PDF...",
+    importTargetDeck: "Target Deck",
+    importSkipExisting: "Skip existing words",
+    importExtractBtn: "Extract Words",
+    importResultTitle: "📊 Extraction Results",
+    importToggleAll: "Select All / Deselect All",
+    importBack: "Back to Edit",
+    importBatchAdd: "Batch Add",
+    // Empty states
+    noCards: "No cards yet",
+    addFirstCard: "Click「＋ Add Word」to get started",
+    noResults: "No matching cards found",
+    noResultsHint: "Try different keywords or filters",
+    // Toast messages
+    cardAdded: "Card added",
+    cardUpdated: "Card updated",
+    cardDeleted: "Card deleted",
+    undoDone: "Undone ↩️",
+    cardSuspended: "Suspended 🚫",
+    cardUnsuspended: "Unsuspended ▶️",
+    flagSet: "Flag set",
+    flagCleared: "Flag cleared",
+    csvExported: "CSV exported ✅",
+    csvImported: "CSV import complete",
+    csvImportCancelled: "CSV import cancelled",
+    difficultyUpdated: "Difficulty updated",
+    rescheduled: "Rescheduled",
+    cardReset: "Card reset",
+    cardMastered: "Marked as mastered ✅",
+    deckRenamed: "Deck renamed",
+    deckDeleted: "Deck deleted",
+    tagCreated: "Tag created 🏷️",
+    tagDeleted: "Tag deleted",
+    batchMoved: "Cards moved",
+    batchTagAdded: "Tags added",
+    batchSuspended: "Cards suspended",
+    batchUnsuspended: "Cards unsuspended",
+    batchDifficultySet: "Difficulty set",
+    batchDeleted: "Cards deleted",
+    noUndo: "Nothing to undo",
+    loadFailed: "Failed to load data",
+    addFailed: "Failed to add",
+    updateFailed: "Failed to update",
+    deleteFailed: "Failed to delete",
+    importFailed: "Import failed",
+    extractFailed: "Extraction failed",
+    batchAddFailed: "Batch add failed",
+    renameFailed: "Rename failed",
+    deckDeleteFailed: "Failed to delete deck",
+    createDeckFailed: "Failed to create deck",
+    getDueFailed: "Failed to get review queue",
+    migrationDetected: "Local legacy data detected, migrating...",
+    migrationDone: "Data migration complete!",
+    migrationFailed: "Data migration failed",
+    importDone: "Import complete",
+    noWordsExtracted: "No new words extracted",
+    wordTranslationRequired: "Word and translation are required",
+    invalidBackup: "Invalid backup file",
+    // Footer
+    footer: "Tap card to flip · Space to flip · 1-4 Grade · S Suspend · F Flag · Ctrl+Z Undo",
+  },
+};
 
 // ---------- 默认数据（第一次使用时加载） ----------
 const DEFAULT_WORDS = [
@@ -219,7 +691,8 @@ async function init() {
   // 添加导入文章按钮到工具栏
   const importBtn = document.createElement("button");
   importBtn.id = "importBtn";
-  importBtn.textContent = "📄 导入文章";
+  importBtn.textContent = t("importArticle");
+  importBtn.setAttribute("data-i18n", "importArticle");
   importBtn.addEventListener("click", openImportModal);
   const statsBtnEl = document.getElementById("statsBtn");
   if (statsBtnEl && statsBtnEl.parentNode) {
@@ -369,8 +842,8 @@ function renderGrid() {
   if (words.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
-        <p>📭 还没有单词卡片</p>
-        <p style="font-size: 0.9rem; color: #666;">点击「添加单词」开始创建</p>
+        <p>📭 ${t('noCards')}</p>
+        <p style="font-size: 0.9rem; color: #666;">${t('addFirstCard')}</p>
       </div>
     `;
     return;
@@ -441,8 +914,8 @@ function renderGrid() {
   if (visibleWords.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
-        <p>🔍 未找到匹配的单词</p>
-        <p style="font-size: 0.9rem; color: #666;">试试其他关键词或筛选条件</p>
+        <p>🔍 ${t('noResults')}</p>
+        <p style="font-size: 0.9rem; color: #666;">${t('noResultsHint')}</p>
       </div>
     `;
     return;
@@ -472,8 +945,8 @@ function renderGrid() {
           </div>
           <div class="word">${escapeHtml(w.word)}</div>
           ${getDifficultyLabel(rd.difficulty)}
-          <button class="card-tts-btn" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word)}')" title="朗读">🔊</button>
-          <div class="hint">点击翻转</div>
+          <button class="card-tts-btn" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word)}')" title="${t('speak')}">🔊</button>
+          <div class="hint">${t('tapToReveal')}</div>
           <button class="card-info-btn" data-id="${w.id}" onclick="event.stopPropagation(); showCardInfo(${w.id})">ℹ️</button>
         </div>
         <div class="card-back">
@@ -509,14 +982,15 @@ function renderStats() {
   const remainingNew = Math.min(newCount, Math.max(0, getEffectiveLimit(dId, "new") - usedNewToday));
   const usedReviewToday = getReviewCardsUsedToday(dId);
   const remainingReview = Math.max(0, getEffectiveLimit(dId, "review") - usedReviewToday);
+  const lang = settings.uiLang || "zh";
   let text = selectedDeckId !== null
-    ? `📁 ${decks.find(d => d.id === selectedDeckId)?.name || "未知卡组"} · ${scopeWords.length} 张`
-    : `📚 ${words.length} 张`;
-  if (streak.count > 0) text += ` 🔥 ${streak.count} 天`;
-  if (learningCount > 0) text += ` · 💛 ${learningCount} 学习中`;
-  if (masteredCount > 0) text += ` · ✅ ${masteredCount} 已掌握`;
-  if (dueCards.length > 0) text += ` · 🔴 ${dueCards.length} 待复习`;
-  text += ` · 🆕 ${remainingNew} 新卡 · 📋 ${remainingReview} 复习`;
+    ? `📁 ${decks.find(d => d.id === selectedDeckId)?.name || "?"} · ${scopeWords.length} ${t('cards')}`
+    : `📚 ${words.length} ${t('cards')}`;
+  if (streak.count > 0) text += ` 🔥 ${streak.count} ${t('days')}`;
+  if (learningCount > 0) text += ` · ${t('learningLabel')} ${learningCount}`;
+  if (masteredCount > 0) text += ` · ${t('masteredLabel')} ${masteredCount}`;
+  if (dueCards.length > 0) text += ` · 🔴 ${dueCards.length} ${t('overdue')}`;
+  text += ` · 🆕 ${remainingNew} ${t('newCards')} · 📋 ${remainingReview} ${t('review')}`;
   statsEl.textContent = text;
 }
 
@@ -606,7 +1080,7 @@ function renderTagList() {
   const list = document.getElementById("tagList");
   if (!list) return;
   if (tags.length === 0) {
-    list.innerHTML = '<div style="padding:8px 16px;font-size:0.75rem;color:#555;">暂无标签</div>';
+    list.innerHTML = `<div style="padding:8px 16px;font-size:0.75rem;color:#555;">${t('noTags')}</div>`;
     return;
   }
   list.innerHTML = tags.map(t => {
@@ -877,8 +1351,8 @@ function closeDeckSettings() {
 function updateDueBadge() {
   const dueCards = getDueCards();
   reviewBtn.textContent = dueCards.length > 0
-    ? `📋 开始复习 (${dueCards.length})`
-    : `📋 开始复习`;
+    ? `📋 ${t('startReview')} (${dueCards.length})`
+    : `📋 ${t('startReview')}`;
 }
 
 // ---------- 工具函数 ----------
@@ -1182,7 +1656,32 @@ let reviewSessionCount = 0; // 本次复习完成的卡片数
 let reviewStartTime = null; // 复习开始时间
 let gradeDistribution = { again: 0, hard: 0, good: 0, easy: 0 }; // 评分分布
 let pendingReviewTip = ""; // 下一张卡片提示
-let settings = { newCardsPerDay: 10, reviewCardsPerDay: 50, deckOverrides: {}, defLang: "en" };
+let settings = { newCardsPerDay: 10, reviewCardsPerDay: 50, deckOverrides: {}, defLang: "zh-CN", uiLang: "zh" };
+
+// ---- i18n 翻译函数 ----
+function t(key) {
+  const lang = (settings && settings.uiLang) || "zh";
+  return (i18n[lang] || i18n.zh)[key] || key;
+}
+
+// ---- 应用 i18n 到 HTML 静态元素 ----
+function applyI18n() {
+  // data-i18n 属性：替换 textContent
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+  // data-i18n-placeholder 属性：替换 placeholder
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    el.placeholder = t(key);
+  });
+  // data-i18n-title 属性：替换 title
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.dataset.i18nTitle;
+    el.title = t(key);
+  });
+}
 
 // ---- 双模式数据层（在线 / 离线）----
 const DataLayer = {
@@ -1378,9 +1877,9 @@ function getReviewData(wordId) {
 // ---------- 难度标签 ----------
 function getDifficultyLabel(difficulty) {
   const diff = difficulty || 2;
-  if (diff === 1) return '<div class="card-difficulty diff-easy">😊 简单</div>';
-  if (diff === 3) return '<div class="card-difficulty diff-hard">😰 困难</div>';
-  return '<div class="card-difficulty diff-medium">🤔 中等</div>';
+  if (diff === 1) return `<div class="card-difficulty diff-easy">${t('easy')}</div>`;
+  if (diff === 3) return `<div class="card-difficulty diff-hard">${t('hard')}</div>`;
+  return `<div class="card-difficulty diff-medium">${t('medium')}</div>`;
 }
 
 function getDifficultyEmoji(difficulty) {
@@ -1393,13 +1892,13 @@ function getDifficultyEmoji(difficulty) {
 // ---------- 卡片状态标签 ----------
 function getCardStatusLabel(wordId) {
   const rd = reviewData[wordId];
-  if (!rd) return { text: "新", class: "status-new" };
+  if (!rd) return { text: t("statusNew"), class: "status-new" };
   switch (rd.cardState) {
-    case "new":      return { text: "新", class: "status-new" };
-    case "learning": return { text: "学习中", class: "status-learning" };
-    case "review":   return { text: "复习", class: "status-review" };
-    case "mastered": return { text: "✅", class: "status-mastered" };
-    default:         return { text: "新", class: "status-new" };
+    case "new":      return { text: t("statusNew"), class: "status-new" };
+    case "learning": return { text: t("statusLearning"), class: "status-learning" };
+    case "review":   return { text: t("statusReview"), class: "status-review" };
+    case "mastered": return { text: t("statusMastered"), class: "status-mastered" };
+    default:         return { text: t("statusNew"), class: "status-new" };
   }
 }
 
@@ -1685,7 +2184,7 @@ async function enterReviewMode() {
     reviewContainer.style.display = "flex";
     document.querySelector(".review-stage").style.display = "none";
     reviewComplete.style.display = "block";
-    reviewSummary.innerHTML = '<div class="summary-line">所有卡片都已掌握，暂无需要复习的卡片。</div>';
+    reviewSummary.innerHTML = `<div class="summary-line">${t('noDueCards')}</div>`;
     document.querySelector("footer").style.display = "none";
     return;
   }
@@ -1738,10 +2237,10 @@ function updateQueueStats() {
   const usedReviewToday = getReviewCardsUsedToday(dId);
   const remainingReview = Math.max(0, getEffectiveLimit(dId, "review") - usedReviewToday);
   const parts = [];
-  if (learning > 0) parts.push(`💛 学习中 ${learning} 张`);
-  if (review > 0) parts.push(`🔵 复习中 ${review} 张`);
-  if (newCards > 0) parts.push(`🆕 新卡片 ${newCards} 张`);
-  parts.push(`今日剩余 ${remainingNew} 新卡 · ${remainingReview} 复习`);
+  if (learning > 0) parts.push(`${t('learningLabel')} ${learning} ${t('cards')}`);
+  if (review > 0) parts.push(`${t('reviewLabel')} ${review} ${t('cards')}`);
+  if (newCards > 0) parts.push(`${t('newCardLabel')} ${newCards} ${t('cards')}`);
+  parts.push(`${t('today')} ${remainingNew} ${t('newCards')} · ${remainingReview} ${t('review')}`);
   reviewQueueStats.textContent = parts.join(" · ");
 }
 
@@ -1775,9 +2274,9 @@ function showNextCard() {
   // 卡片级别显示
   const rd = getReviewData(wordId);
   const levelEl = document.getElementById("reviewCardLevel");
-  const levelMap = { new: "🆕 新卡片", learning: "💛 学习中", review: "🔵 复习", mastered: "✅ 已掌握" };
+  const levelMap = { new: t("newCardLabel"), learning: t("learningLabel"), review: t("reviewLabel"), mastered: t("masteredLabel") };
   if (levelEl) {
-    levelEl.textContent = levelMap[rd.cardState] || "新卡片";
+    levelEl.textContent = levelMap[rd.cardState] || t("newCardLabel");
     levelEl.style.display = "block";
   }
 
@@ -1801,16 +2300,16 @@ function showNextCard() {
       const remainingMs = new Date(rd.nextReview) - new Date();
       if (remainingMs > 0) {
         const remainingSec = Math.ceil(remainingMs / 1000);
-        reviewLearningStep.textContent = `⏳ ${remainingSec} 秒后再次出现`;
+        reviewLearningStep.textContent = `⏳ ${remainingSec} ${t('secondsRemaining')}`;
       } else {
-        reviewLearningStep.textContent = `学习步骤 ${rd.learningStep}/2 · ${waitMinutes} 分钟后再次出现 ⏳`;
+        reviewLearningStep.textContent = `${t('learningStep')} ${rd.learningStep}/2 · ${waitMinutes} min ⏳`;
       }
     } else {
-      reviewLearningStep.textContent = `新卡片 · 学习步骤 ${rd.learningStep}/2`;
+      reviewLearningStep.textContent = `${t('newCardLabel')} · ${t('learningStep')} ${rd.learningStep}/2`;
     }
     reviewLearningStep.style.display = "block";
   } else if (rd.cardState === "new") {
-    reviewLearningStep.textContent = "新卡片";
+    reviewLearningStep.textContent = t("newCardLabel");
     reviewLearningStep.style.display = "block";
   } else {
     reviewLearningStep.style.display = "none";
@@ -1819,7 +2318,7 @@ function showNextCard() {
   // 更新进度
   const total = reviewQueue.length + reviewSessionCount;
   const done = reviewSessionCount;
-  reviewProgress.textContent = `已复习 ${done} 张 · 剩余 ${reviewQueue.length} 张`;
+  reviewProgress.textContent = `${t('reviewLabel')} ${done} ${t('cards')} · ${reviewQueue.length} ${t('cards')}`;
 
   const fill = document.getElementById("reviewProgressFill");
   if (fill && total > 0) {
@@ -1852,13 +2351,13 @@ function startReviewCountdown(wordId) {
     const remainingMs = new Date(rd.nextReview) - new Date();
     if (remainingMs <= 0) {
       clearReviewCountdown();
-      reviewLearningStep.textContent = "已到期，可再次复习";
+      reviewLearningStep.textContent = "⏳ " + t("today");
       return;
     }
     const sec = Math.ceil(remainingMs / 1000);
     const min = Math.floor(sec / 60);
     const s = sec % 60;
-    reviewLearningStep.textContent = "⏳ " + min + ":" + String(s).padStart(2, "0") + " 后再次出现";
+    reviewLearningStep.textContent = "⏳ " + min + ":" + String(s).padStart(2, "0") + " " + t("secondsRemaining");
   };
   update();
   reviewCountdownTimer = setInterval(update, 1000);
@@ -1941,10 +2440,10 @@ async function answerCard(gradeKey) {
   if (rd.cardState === "review" && rd.nextReview) {
     const nextDate = new Date(rd.nextReview);
     const diffDays = Math.ceil((nextDate - new Date()) / 86400000);
-    pendingReviewTip = diffDays <= 0 ? "今天将再次出现" : diffDays + " 天后到期";
+    pendingReviewTip = diffDays <= 0 ? t("today") : diffDays + " " + t("days");
   } else if (rd.cardState === "learning" && rd.nextReview) {
     const diffMin = Math.ceil((new Date(rd.nextReview) - new Date()) / 60000);
-    pendingReviewTip = diffMin + " 分钟后再次出现";
+    pendingReviewTip = diffMin + " min";
   } else {
     pendingReviewTip = "";
   }
@@ -1969,25 +2468,25 @@ function finishReview() {
   }).length;
 
   if (reviewSessionCount === 0) {
-    reviewSummary.innerHTML = '<div class="summary-line">继续加油，下次一定记得更好！</div>';
+    reviewSummary.innerHTML = `<div class="summary-line">${t('reviewDoneMsg1')}</div>`;
   } else {
     const elapsed = Math.floor((new Date() - reviewStartTime) / 1000);
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
-    const timeStr = minutes > 0 ? `${minutes} 分 ${seconds} 秒` : `${seconds} 秒`;
+    const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 
     const distText = [
-      gradeDistribution.again > 0 ? `完全忘了 ${gradeDistribution.again}` : "",
-      gradeDistribution.hard  > 0 ? `有点难 ${gradeDistribution.hard}`   : "",
-      gradeDistribution.good  > 0 ? `记住了 ${gradeDistribution.good}`   : "",
-      gradeDistribution.easy  > 0 ? `超简单 ${gradeDistribution.easy}`   : "",
+      gradeDistribution.again > 0 ? `${t('again')} ${gradeDistribution.again}` : "",
+      gradeDistribution.hard  > 0 ? `${t('hardBtn')} ${gradeDistribution.hard}`   : "",
+      gradeDistribution.good  > 0 ? `${t('good')} ${gradeDistribution.good}`   : "",
+      gradeDistribution.easy  > 0 ? `${t('easyBtn')} ${gradeDistribution.easy}`   : "",
     ].filter(Boolean).join(" · ");
 
     reviewSummary.innerHTML = `
-      <div class="summary-line">📊 本次复习 <strong>${reviewSessionCount}</strong> 张卡片</div>
-      <div class="summary-line">⏱️ 用时 ${timeStr}</div>
+      <div class="summary-line">📊 ${t('review')} <strong>${reviewSessionCount}</strong> ${t('cards')}</div>
+      <div class="summary-line">⏱️ ${timeStr}</div>
       <div class="summary-line">${distText}</div>
-      <div class="summary-line">✅ 已掌握 ${mastered}/${allCards} 张${streakCount > 1 ? ` 🔥 连续 ${streakCount} 天` : ""}</div>
+      <div class="summary-line">${t('masteredLabel')} ${mastered}/${allCards} ${t('cards')}${streakCount > 1 ? ` 🔥 ${t('streakLabel')} ${streakCount} ${t('days')}` : ""}</div>
     `;
   }
 
@@ -2074,7 +2573,8 @@ function loadSettings() {
   // 兼容旧数据：补默认值
   if (settings.reviewCardsPerDay === undefined) settings.reviewCardsPerDay = 50;
   if (!settings.deckOverrides) settings.deckOverrides = {};
-  if (!settings.defLang) settings.defLang = "en";
+  if (!settings.defLang) settings.defLang = "zh-CN";
+  if (settings.uiLang === undefined) settings.uiLang = "zh";
   if (settings.newCardsPerReview === undefined) settings.newCardsPerReview = 2;
   if (settings.dailyNewGoal === undefined) settings.dailyNewGoal = 10;
   if (settings.dailyReviewGoal === undefined) settings.dailyReviewGoal = 50;
@@ -2087,10 +2587,11 @@ function saveSettingsData() {
 function openSettingsModal() {
   settingsNewCards.value = settings.newCardsPerDay;
   const defLangSelect = document.getElementById("settingsDefLang");
-  if (defLangSelect) defLangSelect.value = settings.defLang || "en";
+  if (defLangSelect) defLangSelect.value = settings.defLang || "zh-CN";
   settingsOverlay.classList.add("show");
 
-  // 动态注入：每日额度（复习上限）+ 释义语言 + 忽略列表 + 数据导出
+  // 动态注入：语言选择 + 每日额度 + 释义语言 + 忽略列表 + 数据导出
+  renderSettingsLangSection();
   renderSettingsDailyLimitsSection();
   renderSettingsDefLangSection();
   renderSettingsIgnoreSection();
@@ -2101,11 +2602,42 @@ function openSettingsModal() {
 function closeSettingsModal() {
   settingsOverlay.classList.remove("show");
   // 移除动态注入的区域
-  const secs = ["settingsDailyLimitsSection", "settingsDefLangSection", "settingsIgnoreSection", "settingsExportSection"];
+  const secs = ["settingsLangSection", "settingsDailyLimitsSection", "settingsDefLangSection", "settingsIgnoreSection", "settingsExportSection"];
   secs.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.remove();
   });
+}
+
+// ---------- 设置 — 语言选择 ----------
+function renderSettingsLangSection() {
+  const existing = document.getElementById("settingsLangSection");
+  if (existing) existing.remove();
+
+  const section = document.createElement("div");
+  section.id = "settingsLangSection";
+  section.innerHTML = `
+    <label for="settingsUiLang" style="font-size:0.9rem;color:#ccc;">🌐 ${t('uiLanguage')}</label>
+    <select id="settingsUiLang" style="width:100%;padding:10px 14px;background:#0f0f0f;color:#e0e0e0;border:1px solid #2a2a3e;border-radius:8px;font-size:0.95rem;margin-top:8px;outline:none;margin-bottom:12px;">
+      <option value="zh" ${(settings.uiLang || 'zh') === 'zh' ? 'selected' : ''}>中文</option>
+      <option value="en" ${settings.uiLang === 'en' ? 'selected' : ''}>English</option>
+    </select>
+
+    <label for="settingsDefLangSelect" style="font-size:0.9rem;color:#ccc;">🌐 ${t('translationLanguage')}</label>
+    <select id="settingsDefLangSelect" style="width:100%;padding:10px 14px;background:#0f0f0f;color:#e0e0e0;border:1px solid #2a2a3e;border-radius:8px;font-size:0.95rem;margin-top:8px;outline:none;">
+      <option value="zh-CN" ${(settings.defLang || 'zh-CN') === 'zh-CN' ? 'selected' : ''}>中文 (zh-CN)</option>
+      <option value="ja" ${settings.defLang === 'ja' ? 'selected' : ''}>日文 (ja)</option>
+      <option value="fr" ${settings.defLang === 'fr' ? 'selected' : ''}>法文 (fr)</option>
+      <option value="de" ${settings.defLang === 'de' ? 'selected' : ''}>德文 (de)</option>
+      <option value="ko" ${settings.defLang === 'ko' ? 'selected' : ''}>韩文 (ko)</option>
+      <option value="es" ${settings.defLang === 'es' ? 'selected' : ''}>西班牙文 (es)</option>
+    </select>
+  `;
+
+  const actionsDiv = settingsOverlay.querySelector(".modal-actions");
+  if (actionsDiv && actionsDiv.parentNode) {
+    actionsDiv.parentNode.insertBefore(section, actionsDiv);
+  }
 }
 
 // ---------- 设置 — 释义语言选择 ----------
@@ -2407,7 +2939,25 @@ function handleSettingsSave() {
     }
   }
 
-  const defLangSelect = document.getElementById("settingsDefLang");
+  // UI 语言
+  const uiLangSelect = document.getElementById("settingsUiLang");
+  if (uiLangSelect) {
+    const newLang = uiLangSelect.value;
+    if (newLang !== settings.uiLang) {
+      settings.uiLang = newLang;
+      saveSettingsData();
+      closeSettingsModal();
+      applyI18n();
+      renderDeckSidebar();
+      if (viewMode === "grid") { renderGrid(); }
+      else { browserPage = 1; renderBrowserView(); }
+      renderStats();
+      return;
+    }
+  }
+
+  // 释义语言
+  const defLangSelect = document.getElementById("settingsDefLangSelect");
   if (defLangSelect) settings.defLang = defLangSelect.value;
 
   // 新设置字段
@@ -2583,14 +3133,14 @@ function renderStatsOverview() {
   const remainingReview = Math.max(0, getEffectiveLimit(dId, "review") - usedReviewToday);
 
   const cards = [
-    { value: words.length, label: "总卡片", cls: "" },
-    { value: masteredCount, label: "已掌握", cls: "mastered" },
-    { value: learningCount, label: "学习中", cls: "learning" },
-    { value: reviewCount, label: "复习中", cls: "review" },
-    { value: newCount, label: "新卡片", cls: "new" },
-    { value: `${streak.count || 0} 天`, label: "连续学习", cls: "streak" },
-    { value: remainingNew, label: "今日剩余新卡", cls: "" },
-    { value: remainingReview, label: "今日剩余复习", cls: "" },
+    { value: words.length, label: t("totalCards"), cls: "" },
+    { value: masteredCount, label: t("masteredCards"), cls: "mastered" },
+    { value: learningCount, label: t("learningCards"), cls: "learning" },
+    { value: reviewCount, label: t("reviewCards"), cls: "review" },
+    { value: newCount, label: t("newCardCount"), cls: "new" },
+    { value: `${streak.count || 0} ${t('days')}`, label: t("streakLabel"), cls: "streak" },
+    { value: remainingNew, label: t("todayRemainingNew"), cls: "" },
+    { value: remainingReview, label: t("todayRemainingReview"), cls: "" },
   ];
 
   statsOverview.innerHTML = cards.map(c => `
@@ -2612,10 +3162,10 @@ function renderStatsDistribution() {
   }
   const total = words.length || 1;
   const items = [
-    { label: "新卡片", count: newCount, cls: "new" },
-    { label: "学习中", count: learningCount, cls: "learning" },
-    { label: "复习中", count: reviewCount, cls: "review" },
-    { label: "已掌握", count: masteredCount, cls: "mastered" },
+    { label: t("newCardCount"), count: newCount, cls: "new" },
+    { label: t("learningCards"), count: learningCount, cls: "learning" },
+    { label: t("reviewCards"), count: reviewCount, cls: "review" },
+    { label: t("masteredCards"), count: masteredCount, cls: "mastered" },
   ];
   const el = document.getElementById("statsDistribution");
   if (!el) return;
@@ -2824,14 +3374,14 @@ function renderHardestCards() {
   const top10 = cards.slice(0, 10);
 
   if (top10.length === 0) {
-    el.innerHTML = '<div style="color:#555;font-size:0.85rem;text-align:center;">暂无复习数据</div>';
+    el.innerHTML = `<div style="color:#555;font-size:0.85rem;text-align:center;">${t('noReviewData')}</div>`;
     return;
   }
 
   el.innerHTML = top10.map((c, i) => {
     const lastStr = c.lastReview
       ? new Date(c.lastReview).toLocaleDateString("zh-CN")
-      : "从未";
+      : "-";
     return `
       <div class="hardest-row">
         <span class="hardest-rank">#${i + 1}</span>
@@ -2913,7 +3463,7 @@ function renderBarChart(days) {
   const maxCount = Math.max(...chartData.map(d => d.count), 1);
 
   if (maxCount === 0 && chartData.every(d => d.count === 0)) {
-    statsChart.innerHTML = '<div class="chart-empty">暂无复习记录</div>';
+    statsChart.innerHTML = `<div class="chart-empty">${t('noReviewData')}</div>`;
     return;
   }
 
@@ -3492,7 +4042,8 @@ async function localBatchAddWords(selectedWords, deckId, defLang) {
     if (defLang === "none") return { translation: "", definition: "" };
     try {
       if (defLang === "zh") {
-        const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|zh-CN`);
+        const targetLang = settings.defLang || "zh-CN";
+        const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|${targetLang}`);
         if (!r.ok) return { translation: "", definition: "" };
         const data = await r.json();
         const trans = (data.responseData && data.responseData.translatedText) ? data.responseData.translatedText : "";
@@ -4142,58 +4693,58 @@ function showCardInfo(wordId) {
   const modal = document.getElementById("cardInfoModal");
   if (!overlay || !modal) return;
 
-  const stateLabels = { new: "新卡片", learning: "学习中", review: "复习中", mastered: "已掌握" };
+  const stateLabels = { new: t("newCardLabel"), learning: t("learningLabel"), review: t("reviewLabel"), mastered: t("masteredLabel") };
   const flagEmojis = { 1: "🔴", 2: "🟠", 3: "🟢", 4: "🔵" };
 
   const historyHtml = (rd.history || []).slice(0, 10).map(h => {
-    const gradeLabels = { again: "完全忘了", hard: "有点难", good: "记住了", easy: "超简单" };
+    const gradeLabels = { again: t("again"), hard: t("hardBtn"), good: t("good"), easy: t("easyBtn") };
     return `
       <div class="card-info-history-item grade-${h.gradeKey}">
         <span>${gradeLabels[h.gradeKey] || h.gradeKey}</span>
         <span style="font-size:0.7rem;">${new Date(h.date).toLocaleString("zh-CN")}</span>
       </div>
     `;
-  }).join("") || '<div style="color:#555;font-size:0.8rem;">暂无答题记录</div>';
+  }).join("") || `<div style="color:#555;font-size:0.8rem;">${t('noHistory')}</div>`;
 
   modal.innerHTML = `
-    <h2>${escapeHtml(w.word)} ℹ️</h2>
+    <h2>${escapeHtml(w.word)} ${t('cardInfoTitle')}</h2>
     <div class="card-info-section">
-      <h3>基本信息</h3>
-      <div class="card-info-row"><span class="label">翻译</span><span class="value">${escapeHtml(w.translation)}</span></div>
-      <div class="card-info-row"><span class="label">释义</span><span class="value">${escapeHtml(w.definition || "-")}</span></div>
-      <div class="card-info-row"><span class="label">卡组</span><span class="value">${deck ? escapeHtml(deck.name) : "未分类"}</span></div>
-      <div class="card-info-row"><span class="label">标签</span><span class="value">${wordTags.length > 0 ? wordTags.map(t => `<span class="browser-tag-chip" style="background:${t.color}">${escapeHtml(t.name)}</span>`).join(" ") : "-"}</span></div>
-      <div class="card-info-row"><span class="label">标记</span><span class="value">${rd.flag ? (flagEmojis[rd.flag] || "-") : "-"}</span></div>
+      <h3>${t('basicInfo')}</h3>
+      <div class="card-info-row"><span class="label">${t('translation')}</span><span class="value">${escapeHtml(w.translation)}</span></div>
+      <div class="card-info-row"><span class="label">${t('definitionLabel')}</span><span class="value">${escapeHtml(w.definition || "-")}</span></div>
+      <div class="card-info-row"><span class="label">${t('deck')}</span><span class="value">${deck ? escapeHtml(deck.name) : t('uncategorized')}</span></div>
+      <div class="card-info-row"><span class="label">${t('tags')}</span><span class="value">${wordTags.length > 0 ? wordTags.map(t => `<span class="browser-tag-chip" style="background:${t.color}">${escapeHtml(t.name)}</span>`).join(" ") : "-"}</span></div>
+      <div class="card-info-row"><span class="label">${t('flag')}</span><span class="value">${rd.flag ? (flagEmojis[rd.flag] || "-") : "-"}</span></div>
     </div>
     <div class="card-info-section">
-      <h3>复习统计</h3>
-      <div class="card-info-row"><span class="label">状态</span><span class="value">${stateLabels[rd.cardState] || "新卡片"}</span></div>
-      <div class="card-info-row"><span class="label">复习次数 (reps)</span><span class="value">${rd.reps || 0}</span></div>
-      <div class="card-info-row"><span class="label">难度系数 (EF)</span><span class="value">${(rd.ef || 2.5).toFixed(2)}</span></div>
-      <div class="card-info-row"><span class="label">间隔 (interval)</span><span class="value">${rd.interval || 0} 天</span></div>
-      <div class="card-info-row"><span class="label">下次复习</span><span class="value">${rd.nextReview ? new Date(rd.nextReview).toLocaleDateString("zh-CN") : "未安排"}</span></div>
-      <div class="card-info-row"><span class="label">学习步骤</span><span class="value">${(rd.cardState === "learning" && rd.learningStep) ? `步骤 ${rd.learningStep}/2` : "-"}</span></div>
-      <div class="card-info-row"><span class="label">挂起</span><span class="value">${rd.suspended ? "是 🚫" : "否"}</span></div>
+      <h3>${t('reviewStats')}</h3>
+      <div class="card-info-row"><span class="label">${t('cardState')}</span><span class="value">${stateLabels[rd.cardState] || t('newCardLabel')}</span></div>
+      <div class="card-info-row"><span class="label">${t('reps')}</span><span class="value">${rd.reps || 0}</span></div>
+      <div class="card-info-row"><span class="label">${t('easeFactor')}</span><span class="value">${(rd.ef || 2.5).toFixed(2)}</span></div>
+      <div class="card-info-row"><span class="label">${t('interval')}</span><span class="value">${rd.interval || 0} ${t('days')}</span></div>
+      <div class="card-info-row"><span class="label">${t('nextReview')}</span><span class="value">${rd.nextReview ? new Date(rd.nextReview).toLocaleDateString() : "-"}</span></div>
+      <div class="card-info-row"><span class="label">${t('learningStep')}</span><span class="value">${(rd.cardState === "learning" && rd.learningStep) ? `Step ${rd.learningStep}/2` : "-"}</span></div>
+      <div class="card-info-row"><span class="label">${t('suspendedStatus')}</span><span class="value">${rd.suspended ? t('suspend') : t('none')}</span></div>
     </div>
     <div class="card-info-section">
-      <h3>答题历史（最近）</h3>
+      <h3>${t('reviewHistory')}</h3>
       ${historyHtml}
     </div>
     <div class="card-info-section">
-      <h3>📊 难度</h3>
+      <h3>${t('difficultySection')}</h3>
       <div class="difficulty-selector" id="cardInfoDiffSelector">
-        <button class="diff-btn diff-easy ${rd.difficulty === 1 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 1, this)">😊 简单</button>
-        <button class="diff-btn diff-medium ${(rd.difficulty || 2) === 2 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 2, this)">🤔 中等</button>
-        <button class="diff-btn diff-hard ${rd.difficulty === 3 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 3, this)">😰 困难</button>
+        <button class="diff-btn diff-easy ${rd.difficulty === 1 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 1, this)">${t('easy')}</button>
+        <button class="diff-btn diff-medium ${(rd.difficulty || 2) === 2 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 2, this)">${t('medium')}</button>
+        <button class="diff-btn diff-hard ${rd.difficulty === 3 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 3, this)">${t('hard')}</button>
       </div>
     </div>
     <div class="card-info-actions">
-      <button onclick="speakWord('${escapeHtml(w.word)}')">🔊 朗读</button>
-      <button onclick="rescheduleCard(${wordId})">📅 重排</button>
-      <button onclick="resetCard(${wordId})">🔄 重置</button>
-      <button onclick="masterCard(${wordId})">✅ 设为已掌握</button>
-      <button onclick="toggleSuspendCard(${wordId})">${rd.suspended ? '▶️ 取消挂起' : '🚫 挂起'}</button>
-      <button class="danger" onclick="closeCardInfo()">关闭</button>
+      <button onclick="speakWord('${escapeHtml(w.word)}')">${t('speak')}</button>
+      <button onclick="rescheduleCard(${wordId})">${t('reschedule')}</button>
+      <button onclick="resetCard(${wordId})">${t('resetCard')}</button>
+      <button onclick="masterCard(${wordId})">${t('markMastered')}</button>
+      <button onclick="toggleSuspendCard(${wordId})">${rd.suspended ? t('toggleUnsuspend') : t('toggleSuspend')}</button>
+      <button class="danger" onclick="closeCardInfo()">${t('close')}</button>
     </div>
   `;
 
@@ -4326,8 +4877,9 @@ function speakWord(word) {
   if (!window.speechSynthesis) { showToast("浏览器不支持语音朗读", "error"); return; }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(word);
-  const lang = settings.defLang === "zh" ? "zh-CN" : "en-US";
-  utterance.lang = lang;
+  const langMap = { "zh-CN": "zh-CN", "zh": "zh-CN", ja: "ja-JP", fr: "fr-FR", de: "de-DE", ko: "ko-KR", es: "es-ES" };
+  const ttsLang = langMap[settings.defLang] || "en-US";
+  utterance.lang = ttsLang;
   utterance.rate = 0.85;
   window.speechSynthesis.speak(utterance);
 }
@@ -4732,5 +5284,6 @@ function setupRound2Events() {
 
 // ---------- 启动 ----------
 loadSettings();
+applyI18n();
 init();
 setupRound2Events();

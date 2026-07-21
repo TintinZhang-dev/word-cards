@@ -25,19 +25,19 @@
 
     <!-- 工具栏 -->
     <div class="toolbar">
-      <button id="addBtn">＋ 添加单词</button>
-      <button id="reviewBtn">📋 开始复习</button>
-      <button id="browserToggleBtn" title="切换浏览器视图">📋 列表</button>
-      <button id="statsBtn" title="统计">📊 统计</button>
-      <button id="settingsBtn" title="设置">⚙️</button>
+      <button id="addBtn" data-i18n="addWord">＋ 添加单词</button>
+      <button id="reviewBtn" data-i18n="startReview">📋 开始复习</button>
+      <button id="browserToggleBtn" data-i18n="toggleBrowser">📋 列表</button>
+      <button id="statsBtn" data-i18n="stats">📊 统计</button>
+      <button id="settingsBtn" data-i18n="settings">⚙️</button>
     </div>
 
     <!-- 主内容区：侧边栏 + 卡片区域 -->
     <main>
       <aside class="deck-sidebar" id="deckSidebar">
         <div class="deck-sidebar-header">
-          <h3>📂 卡组</h3>
-          <button id="addDeckBtn" class="deck-add-btn" title="新建卡组">+</button>
+          <h3 data-i18n="decks">📂 卡组</h3>
+          <button id="addDeckBtn" class="deck-add-btn" data-i18n="newDeck">+</button>
         </div>
         <div class="deck-list" id="deckList">
           <!-- 动态渲染 -->
@@ -46,8 +46,8 @@
         <!-- 标签区域 -->
         <div class="sidebar-section" id="tagSection">
           <div class="deck-sidebar-header">
-            <h3>🏷️ 标签</h3>
-            <button id="addTagBtn" class="deck-add-btn" title="新建标签">+</button>
+            <h3 data-i18n="tagsSidebar">🏷️ 标签</h3>
+            <button id="addTagBtn" class="deck-add-btn" data-i18n="addTag">+</button>
           </div>
           <div class="tag-list" id="tagList">
             <!-- 动态渲染 -->
@@ -57,15 +57,15 @@
         <!-- 筛选区域 -->
         <div class="sidebar-section" id="filterSection">
           <div class="deck-sidebar-header">
-            <h3>🔍 筛选</h3>
+            <h3 data-i18n="filter">🔍 筛选</h3>
           </div>
           <div class="filter-list" id="filterList">
             <div class="filter-item" data-filter="suspended" onclick="toggleSuspendedFilter()">
-              <span>🚫 已挂起</span>
+              <span data-i18n="suspendedFilter">🚫 已挂起</span>
               <span class="filter-count" id="suspendedCount">0</span>
             </div>
             <div class="filter-item" data-filter="flagged" onclick="cycleFlagFilter()">
-              <span>🚩 有标记</span>
+              <span data-i18n="flaggedFilter">🚩 有标记</span>
               <span class="filter-count" id="flaggedCount">0</span>
             </div>
           </div>
@@ -78,28 +78,28 @@
 
         <!-- 搜索栏 -->
         <div class="search-bar">
-          <input type="text" id="searchInput" placeholder="🔍 搜索单词、翻译或释义...（tag:xxx 按标签过滤）" />
+          <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="🔍 搜索单词、翻译或释义...（tag:xxx 按标签过滤）" />
           <button id="searchClear" class="search-clear hidden">✕</button>
         </div>
 
         <!-- 浏览器高级筛选栏 -->
         <div class="browser-filters" id="browserFilters" style="display:none">
           <div class="browser-filter-row">
-            <span class="browser-filter-label">状态:</span>
-            <button class="browser-filter-chip active" data-status="all" onclick="setBrowserStatusFilter('all')">全部</button>
-            <button class="browser-filter-chip" data-status="new" onclick="setBrowserStatusFilter('new')">新卡片</button>
-            <button class="browser-filter-chip" data-status="learning" onclick="setBrowserStatusFilter('learning')">学习中</button>
-            <button class="browser-filter-chip" data-status="review" onclick="setBrowserStatusFilter('review')">复习中</button>
-            <button class="browser-filter-chip" data-status="mastered" onclick="setBrowserStatusFilter('mastered')">已掌握</button>
+            <span class="browser-filter-label" data-i18n="status">状态:</span>
+            <button class="browser-filter-chip active" data-status="all" onclick="setBrowserStatusFilter('all')" data-i18n="all">全部</button>
+            <button class="browser-filter-chip" data-status="new" onclick="setBrowserStatusFilter('new')" data-i18n="newCards">新卡片</button>
+            <button class="browser-filter-chip" data-status="learning" onclick="setBrowserStatusFilter('learning')" data-i18n="learning">学习中</button>
+            <button class="browser-filter-chip" data-status="review" onclick="setBrowserStatusFilter('review')" data-i18n="review">复习中</button>
+            <button class="browser-filter-chip" data-status="mastered" onclick="setBrowserStatusFilter('mastered')" data-i18n="mastered">已掌握</button>
           </div>
           <div class="browser-filter-row">
-            <span class="browser-filter-label">到期:</span>
-            <button class="browser-filter-chip active" data-due="all" onclick="setBrowserDueFilter('all')">全部</button>
-            <button class="browser-filter-chip" data-due="today" onclick="setBrowserDueFilter('today')">今天</button>
-            <button class="browser-filter-chip" data-due="tomorrow" onclick="setBrowserDueFilter('tomorrow')">明天</button>
-            <button class="browser-filter-chip" data-due="week" onclick="setBrowserDueFilter('week')">本周</button>
-            <button class="browser-filter-chip" data-due="overdue" onclick="setBrowserDueFilter('overdue')">过期</button>
-            <button class="browser-filter-chip" data-due="none" onclick="setBrowserDueFilter('none')">无安排</button>
+            <span class="browser-filter-label" data-i18n="due">到期:</span>
+            <button class="browser-filter-chip active" data-due="all" onclick="setBrowserDueFilter('all')" data-i18n="all">全部</button>
+            <button class="browser-filter-chip" data-due="today" onclick="setBrowserDueFilter('today')" data-i18n="today">今天</button>
+            <button class="browser-filter-chip" data-due="tomorrow" onclick="setBrowserDueFilter('tomorrow')" data-i18n="tomorrow">明天</button>
+            <button class="browser-filter-chip" data-due="week" onclick="setBrowserDueFilter('week')" data-i18n="week">本周</button>
+            <button class="browser-filter-chip" data-due="overdue" onclick="setBrowserDueFilter('overdue')" data-i18n="overdue">过期</button>
+            <button class="browser-filter-chip" data-due="none" onclick="setBrowserDueFilter('none')" data-i18n="none">无安排</button>
           </div>
         </div>
 
@@ -110,27 +110,27 @@
         <div class="browser-view" id="browserView" style="display:none">
           <div class="browser-batch-toolbar" id="browserBatchToolbar" style="display:none">
             <span id="browserBatchCount">已选 0 张</span>
-            <button onclick="browserBatchDelete()">🗑️ 删除</button>
-            <button onclick="browserBatchMoveDeck()">📁 移至卡组</button>
-            <button onclick="browserBatchAddTag()">🏷️ 添加标签</button>
-            <button onclick="browserBatchSuspend()">🚫 挂起</button>
-            <button onclick="browserBatchUnsuspend()">✅ 恢复</button>
-            <button onclick="browserBatchSetDifficulty()">📊 批量设置难度</button>
+            <button onclick="browserBatchDelete()" data-i18n="delete">🗑️ 删除</button>
+            <button onclick="browserBatchMoveDeck()" data-i18n="moveTo">📁 移至卡组</button>
+            <button onclick="browserBatchAddTag()" data-i18n="addTagShort">🏷️ 添加标签</button>
+            <button onclick="browserBatchSuspend()" data-i18n="suspend">🚫 挂起</button>
+            <button onclick="browserBatchUnsuspend()" data-i18n="unsuspend">✅ 恢复</button>
+            <button onclick="browserBatchSetDifficulty()" data-i18n="setDifficulty">📊 批量设置难度</button>
           </div>
           <div class="browser-table-wrapper">
             <table class="browser-table" id="browserTable">
               <thead>
                 <tr>
                   <th style="width:30px"><input type="checkbox" id="browserSelectAll" onclick="browserToggleSelectAll()"></th>
-                  <th data-sort="word" onclick="browserSort('word')">单词 <span class="sort-arrow"></span></th>
-                  <th data-sort="translation" onclick="browserSort('translation')">翻译 <span class="sort-arrow"></span></th>
-                  <th data-sort="deck" onclick="browserSort('deck')">卡组 <span class="sort-arrow"></span></th>
-                  <th data-sort="tags" onclick="browserSort('tags')">标签 <span class="sort-arrow"></span></th>
-                  <th data-sort="flag" onclick="browserSort('flag')">标记 <span class="sort-arrow"></span></th>
-                  <th data-sort="difficulty" onclick="browserSort('difficulty')" style="width:60px">难度 <span class="sort-arrow"></span></th>
-                  <th data-sort="status" onclick="browserSort('status')">状态 <span class="sort-arrow"></span></th>
-                  <th data-sort="nextReview" onclick="browserSort('nextReview')">下次复习 <span class="sort-arrow"></span></th>
-                  <th>操作</th>
+                  <th data-sort="word" onclick="browserSort('word')"><span data-i18n="word">单词</span> <span class="sort-arrow"></span></th>
+                  <th data-sort="translation" onclick="browserSort('translation')"><span data-i18n="translation">翻译</span> <span class="sort-arrow"></span></th>
+                  <th data-sort="deck" onclick="browserSort('deck')"><span data-i18n="deck">卡组</span> <span class="sort-arrow"></span></th>
+                  <th data-sort="tags" onclick="browserSort('tags')"><span data-i18n="tags">标签</span> <span class="sort-arrow"></span></th>
+                  <th data-sort="flag" onclick="browserSort('flag')"><span data-i18n="flag">标记</span> <span class="sort-arrow"></span></th>
+                  <th data-sort="difficulty" onclick="browserSort('difficulty')" style="width:60px"><span data-i18n="difficulty">难度</span> <span class="sort-arrow"></span></th>
+                  <th data-sort="status" onclick="browserSort('status')"><span data-i18n="status">状态</span> <span class="sort-arrow"></span></th>
+                  <th data-sort="nextReview" onclick="browserSort('nextReview')"><span data-i18n="nextReview">下次复习</span> <span class="sort-arrow"></span></th>
+                  <th><span data-i18n="actions">操作</span></th>
                 </tr>
               </thead>
               <tbody id="browserTableBody"></tbody>
@@ -144,32 +144,32 @@
     <!-- 统计页面 -->
     <div class="stats-page" id="statsPage" style="display: none">
       <div class="stats-page-header">
-        <button class="stats-back-btn" id="statsBackBtn">← 返回</button>
-        <h2>📊 学习统计</h2>
+        <button class="stats-back-btn" id="statsBackBtn" data-i18n="back">← 返回</button>
+        <h2 data-i18n="statsTitle">📊 学习统计</h2>
       </div>
 
       <div class="stats-overview" id="statsOverview"></div>
 
       <!-- 卡片分布 -->
       <div class="stats-chart-section">
-        <h3>📊 卡片分布</h3>
+        <h3 data-i18n="cardDistribution">📊 卡片分布</h3>
         <div class="stats-distribution" id="statsDistribution"></div>
         <div class="stats-difficulty-dist" id="statsDifficultyDist" style="margin-top:12px;font-size:0.85rem;"></div>
       </div>
 
       <!-- 保留率 -->
       <div class="stats-chart-section">
-        <h3>📈 保留率</h3>
+        <h3 data-i18n="retentionRate">📈 保留率</h3>
         <div class="stats-retention" id="statsRetention"></div>
       </div>
 
       <!-- 学习趋势 -->
       <div class="stats-chart-section">
         <div class="stats-chart-header">
-          <h3>📉 学习趋势</h3>
+          <h3 data-i18n="studyTrend">📉 学习趋势</h3>
           <div class="stats-period-toggle">
-            <button class="period-btn active" data-period="7">7 天</button>
-            <button class="period-btn" data-period="30">30 天</button>
+            <button class="period-btn active" data-period="7" data-i18n="days7">7 天</button>
+            <button class="period-btn" data-period="30" data-i18n="days30">30 天</button>
           </div>
         </div>
         <div class="stats-trend-chart" id="statsTrendChart"></div>
@@ -178,10 +178,10 @@
       <!-- 预测 -->
       <div class="stats-chart-section">
         <div class="stats-chart-header">
-          <h3>🔮 到期预测</h3>
+          <h3 data-i18n="forecastTitle">🔮 到期预测</h3>
           <div class="stats-period-toggle">
-            <button class="period-btn-forecast active" data-period="7">7 天</button>
-            <button class="period-btn-forecast" data-period="30">30 天</button>
+            <button class="period-btn-forecast active" data-period="7" data-i18n="days7">7 天</button>
+            <button class="period-btn-forecast" data-period="30" data-i18n="days30">30 天</button>
           </div>
         </div>
         <div class="stats-forecast-chart" id="statsForecastChart"></div>
@@ -190,10 +190,10 @@
       <!-- 每日复习记录 -->
       <div class="stats-chart-section">
         <div class="stats-chart-header">
-          <h3>每日复习记录</h3>
+          <h3 data-i18n="dailyReview">每日复习记录</h3>
           <div class="stats-period-toggle">
-            <button class="period-btn active" data-period="7">7 天</button>
-            <button class="period-btn" data-period="30">30 天</button>
+            <button class="period-btn active" data-period="7" data-i18n="days7">7 天</button>
+            <button class="period-btn" data-period="30" data-i18n="days30">30 天</button>
           </div>
         </div>
         <div class="stats-chart" id="statsChart"></div>
@@ -201,13 +201,13 @@
 
       <!-- 最难卡片 -->
       <div class="stats-chart-section">
-        <h3>🏆 最难卡片 Top 10</h3>
+        <h3 data-i18n="hardestCards">🏆 最难卡片 Top 10</h3>
         <div class="stats-hardest" id="statsHardest"></div>
       </div>
 
       <!-- 目标达成率 -->
       <div class="stats-chart-section">
-        <h3>🎯 目标达成率</h3>
+        <h3 data-i18n="goalAchievement">🎯 目标达成率</h3>
         <div class="stats-goals" id="statsGoals"></div>
       </div>
     </div>
@@ -215,43 +215,43 @@
     <!-- 模态框（新增/编辑单词） -->
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
-        <h2 id="modalTitle">添加单词</h2>
+        <h2 id="modalTitle" data-i18n="addWordTitle">添加单词</h2>
 
-        <label for="modalWord">单词（英文）</label>
-        <input id="modalWord" type="text" placeholder="输入英文单词" />
+        <label for="modalWord" data-i18n="wordLabel">单词（英文）</label>
+        <input id="modalWord" type="text" data-i18n-placeholder="wordPlaceholder" placeholder="输入英文单词" />
 
-        <label for="modalTranslation">翻译（中文）</label>
-        <input id="modalTranslation" type="text" placeholder="输入中文翻译" />
+        <label for="modalTranslation" data-i18n="translationLabel">翻译（中文）</label>
+        <input id="modalTranslation" type="text" data-i18n-placeholder="translationPlaceholder" placeholder="输入中文翻译" />
 
-        <label for="modalDefinition">释义（选填）</label>
-        <textarea id="modalDefinition" placeholder="输入详细释义或例句"></textarea>
+        <label for="modalDefinition" data-i18n="definitionLabel">释义（选填）</label>
+        <textarea id="modalDefinition" data-i18n-placeholder="definitionPlaceholder" placeholder="输入详细释义或例句"></textarea>
 
-        <label for="modalDeck">卡组</label>
+        <label for="modalDeck" data-i18n="deckLabel">卡组</label>
         <select id="modalDeck">
           <option value="">未分类</option>
         </select>
 
         <!-- 标签选择 -->
-        <label>🏷️ 标签</label>
+        <label data-i18n="tagsLabel">🏷️ 标签</label>
         <div class="modal-tags-container" id="modalTagsContainer">
           <div class="modal-tags-chips" id="modalTagsChips"></div>
           <div class="modal-tags-dropdown" id="modalTagsDropdown" style="display:none">
             <div class="modal-tags-dropdown-list" id="modalTagsDropdownList"></div>
           </div>
         </div>
-        <button class="modal-tags-add-btn" id="modalTagsAddBtn" onclick="toggleModalTagsDropdown()">+ 添加标签</button>
+        <button class="modal-tags-add-btn" id="modalTagsAddBtn" onclick="toggleModalTagsDropdown()" data-i18n="addTagLabel">+ 添加标签</button>
 
         <!-- 难度选择 -->
-        <label style="margin-top:12px;">📊 难度</label>
+        <label style="margin-top:12px;" data-i18n="difficultyLabel">📊 难度</label>
         <div class="difficulty-selector" id="modalDifficultySelector">
-          <button class="diff-btn diff-easy" data-diff="1" onclick="selectModalDifficulty(1, this)">😊 简单</button>
-          <button class="diff-btn diff-medium active" data-diff="2" onclick="selectModalDifficulty(2, this)">🤔 中等</button>
-          <button class="diff-btn diff-hard" data-diff="3" onclick="selectModalDifficulty(3, this)">😰 困难</button>
+          <button class="diff-btn diff-easy" data-diff="1" onclick="selectModalDifficulty(1, this)" data-i18n="easy">😊 简单</button>
+          <button class="diff-btn diff-medium active" data-diff="2" onclick="selectModalDifficulty(2, this)" data-i18n="medium">🤔 中等</button>
+          <button class="diff-btn diff-hard" data-diff="3" onclick="selectModalDifficulty(3, this)" data-i18n="hard">😰 困难</button>
         </div>
 
         <div class="modal-actions">
-          <button class="btn-cancel" id="modalCancel">取消</button>
-          <button class="btn-confirm" id="modalConfirm">确认</button>
+          <button class="btn-cancel" id="modalCancel" data-i18n="cancel">取消</button>
+          <button class="btn-confirm" id="modalConfirm" data-i18n="confirm">确认</button>
         </div>
       </div>
     </div>
@@ -266,14 +266,14 @@
     <!-- 设置模态框 -->
     <div class="modal-overlay" id="settingsOverlay">
       <div class="modal">
-        <h2>⚙️ 设置</h2>
+        <h2 data-i18n="settingsTitle">⚙️ 设置</h2>
 
-        <label for="settingsNewCards">每日新卡片上限</label>
+        <label for="settingsNewCards" data-i18n="dailyNewLimit">每日新卡片上限</label>
         <input id="settingsNewCards" type="number" min="0" max="100" value="10" />
 
         <div class="modal-actions">
-          <button class="btn-cancel" id="settingsCancel">取消</button>
-          <button class="btn-confirm" id="settingsSave">保存</button>
+          <button class="btn-cancel" id="settingsCancel" data-i18n="cancel">取消</button>
+          <button class="btn-confirm" id="settingsSave" data-i18n="save">保存</button>
         </div>
       </div>
     </div>
@@ -281,7 +281,7 @@
     <!-- 复习模式 -->
     <div class="review-container" id="reviewContainer" style="display: none">
       <div class="review-header">
-        <button class="review-exit-btn" id="reviewExitBtn">✕ 退出复习</button>
+        <button class="review-exit-btn" id="reviewExitBtn" data-i18n="exitReview">✕ 退出复习</button>
         <div class="review-queue-stats" id="reviewQueueStats"></div>
         <div class="review-progress" id="reviewProgress">0 / 0</div>
       </div>
@@ -296,7 +296,7 @@
               <div class="review-card-front-extra">
                 <button class="review-tts-btn" id="reviewTtsBtn" onclick="event.stopPropagation();speakReviewWord()" title="朗读">🔊</button>
               </div>
-              <div class="hint">点击翻转查看答案</div>
+              <div class="hint" data-i18n="tapToReveal">点击翻转查看答案</div>
             </div>
             <div class="review-card-back">
               <div class="review-learning-step" id="reviewLearningStep" style="display:none"></div>
@@ -309,30 +309,30 @@
 
         <div class="review-actions" id="reviewActions" style="display: none">
           <button id="btnAgain" class="grade-btn grade-again">
-            <span class="grade-text">完全忘了</span>
+            <span class="grade-text" data-i18n="again">完全忘了</span>
             <kbd class="grade-key">1</kbd>
           </button>
           <button id="btnHard" class="grade-btn grade-hard">
-            <span class="grade-text">有点难</span>
+            <span class="grade-text" data-i18n="hardBtn">有点难</span>
             <kbd class="grade-key">2</kbd>
           </button>
           <button id="btnGood" class="grade-btn grade-good">
-            <span class="grade-text">记住了</span>
+            <span class="grade-text" data-i18n="good">记住了</span>
             <kbd class="grade-key">3</kbd>
           </button>
           <button id="btnEasy" class="grade-btn grade-easy">
-            <span class="grade-text">超简单</span>
+            <span class="grade-text" data-i18n="easyBtn">超简单</span>
             <kbd class="grade-key">4</kbd>
           </button>
         </div>
 
         <!-- 复习快捷键提示 -->
         <div class="review-shortcuts-hint">
-          <span>空格 翻转</span>
-          <span>1-4 评分</span>
-          <span>S 挂起</span>
-          <span>F 标记</span>
-          <span>Ctrl+Z 撤销</span>
+          <span data-i18n="spaceToFlip">空格 翻转</span>
+          <span data-i18n="keysGrade">1-4 评分</span>
+          <span data-i18n="keySuspend">S 挂起</span>
+          <span data-i18n="keyFlag">F 标记</span>
+          <span data-i18n="keyUndo">Ctrl+Z 撤销</span>
         </div>
       </div>
 
@@ -347,9 +347,9 @@
 
       <div class="review-complete" id="reviewComplete" style="display: none">
         <div class="complete-icon">🎉</div>
-        <h2>复习完成！</h2>
+        <h2 data-i18n="reviewComplete">复习完成！</h2>
         <p id="reviewSummary"></p>
-        <button class="review-back-btn" id="reviewBackBtn">返回卡片列表</button>
+        <button class="review-back-btn" id="reviewBackBtn" data-i18n="backToList">返回卡片列表</button>
       </div>
     </div>
 
@@ -363,10 +363,10 @@
     <!-- 标签编辑弹窗 -->
     <div class="modal-overlay" id="tagEditOverlay">
       <div class="modal" id="tagEditModal">
-        <h2>🏷️ 添加标签</h2>
-        <label for="tagEditName">标签名称</label>
-        <input id="tagEditName" type="text" placeholder="输入标签名称" />
-        <label>颜色</label>
+        <h2 data-i18n="addTagTitle">🏷️ 添加标签</h2>
+        <label for="tagEditName" data-i18n="tagNameLabel">标签名称</label>
+        <input id="tagEditName" type="text" data-i18n-placeholder="tagNamePlaceholder" placeholder="输入标签名称" />
+        <label data-i18n="color">颜色</label>
         <div class="tag-color-picker" id="tagColorPicker">
           <button class="tag-color-option" data-color="#4a9eff" style="background:#4a9eff" onclick="selectTagColor('#4a9eff', this)"></button>
           <button class="tag-color-option" data-color="#e74c3c" style="background:#e74c3c" onclick="selectTagColor('#e74c3c', this)"></button>
@@ -378,13 +378,13 @@
           <button class="tag-color-option" data-color="#95a5a6" style="background:#95a5a6" onclick="selectTagColor('#95a5a6', this)"></button>
         </div>
         <div class="modal-actions">
-          <button class="btn-cancel" id="tagEditCancel">取消</button>
-          <button class="btn-confirm" id="tagEditSave">保存</button>
+          <button class="btn-cancel" id="tagEditCancel" data-i18n="cancel">取消</button>
+          <button class="btn-confirm" id="tagEditSave" data-i18n="save">保存</button>
         </div>
       </div>
     </div>
 
-    <footer>点击卡片翻转查看释义 · 空格键翻转 · 1-4评分 · S挂起 · F标记 · Ctrl+Z撤销</footer>
+    <footer data-i18n="footer">点击卡片翻转查看释义 · 空格键翻转 · 1-4评分 · S挂起 · F标记 · Ctrl+Z撤销</footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="api.js"></script>
