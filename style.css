@@ -664,7 +664,7 @@ main {
   height: 100%;
   position: relative;
   cursor: pointer;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
   border-radius: 20px;
 }
@@ -2429,3 +2429,60 @@ footer {
   background: #2a2a1a;
   border-color: #6e6e2a;
 }
+
+/* ---- 难度选择按钮 ---- */
+.difficulty-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.diff-btn {
+  flex: 1;
+  padding: 10px 8px;
+  background: transparent;
+  color: #888;
+  border: 1px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.diff-btn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+.diff-btn.active {
+  color: #e0e0e0;
+}
+
+.diff-easy.active {
+  background: rgba(46, 204, 113, 0.15);
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
+.diff-medium.active {
+  background: rgba(232, 193, 112, 0.15);
+  border-color: #e8c170;
+  color: #e8c170;
+}
+
+.diff-hard.active {
+  background: rgba(231, 76, 60, 0.15);
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+/* ---- 卡片难度指示 ---- */
+.card-difficulty {
+  font-size: 0.72rem;
+  margin-top: 2px;
+  letter-spacing: 0.03em;
+}
+
+.card-difficulty.diff-easy { color: #2ecc71; }
+.card-difficulty.diff-medium { color: #e8c170; }
+.card-difficulty.diff-hard { color: #e74c3c; }

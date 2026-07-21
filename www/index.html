@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WordCards</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#1a1a2e" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
   </head>
   <body>
     <div id="toastContainer" class="toast-container"></div>
@@ -110,6 +115,7 @@
             <button onclick="browserBatchAddTag()">🏷️ 添加标签</button>
             <button onclick="browserBatchSuspend()">🚫 挂起</button>
             <button onclick="browserBatchUnsuspend()">✅ 恢复</button>
+            <button onclick="browserBatchSetDifficulty()">📊 批量设置难度</button>
           </div>
           <div class="browser-table-wrapper">
             <table class="browser-table" id="browserTable">
@@ -121,6 +127,7 @@
                   <th data-sort="deck" onclick="browserSort('deck')">卡组 <span class="sort-arrow"></span></th>
                   <th data-sort="tags" onclick="browserSort('tags')">标签 <span class="sort-arrow"></span></th>
                   <th data-sort="flag" onclick="browserSort('flag')">标记 <span class="sort-arrow"></span></th>
+                  <th data-sort="difficulty" onclick="browserSort('difficulty')" style="width:60px">难度 <span class="sort-arrow"></span></th>
                   <th data-sort="status" onclick="browserSort('status')">状态 <span class="sort-arrow"></span></th>
                   <th data-sort="nextReview" onclick="browserSort('nextReview')">下次复习 <span class="sort-arrow"></span></th>
                   <th>操作</th>
@@ -147,6 +154,7 @@
       <div class="stats-chart-section">
         <h3>📊 卡片分布</h3>
         <div class="stats-distribution" id="statsDistribution"></div>
+        <div class="stats-difficulty-dist" id="statsDifficultyDist" style="margin-top:12px;font-size:0.85rem;"></div>
       </div>
 
       <!-- 保留率 -->
@@ -232,6 +240,14 @@
           </div>
         </div>
         <button class="modal-tags-add-btn" id="modalTagsAddBtn" onclick="toggleModalTagsDropdown()">+ 添加标签</button>
+
+        <!-- 难度选择 -->
+        <label style="margin-top:12px;">📊 难度</label>
+        <div class="difficulty-selector" id="modalDifficultySelector">
+          <button class="diff-btn diff-easy" data-diff="1" onclick="selectModalDifficulty(1, this)">😊 简单</button>
+          <button class="diff-btn diff-medium active" data-diff="2" onclick="selectModalDifficulty(2, this)">🤔 中等</button>
+          <button class="diff-btn diff-hard" data-diff="3" onclick="selectModalDifficulty(3, this)">😰 困难</button>
+        </div>
 
         <div class="modal-actions">
           <button class="btn-cancel" id="modalCancel">取消</button>
@@ -373,5 +389,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="api.js"></script>
     <script src="app.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+    </script>
   </body>
 </html>

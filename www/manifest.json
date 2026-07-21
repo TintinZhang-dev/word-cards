@@ -1,0 +1,10 @@
+{
+  "name": "WordCards",
+  "short_name": "WordCards",
+  "description": "智能单词卡学习工具",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#1a1a2e",
+  "icons": []
+}

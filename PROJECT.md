@@ -37,10 +37,17 @@
 - [x] 一键生成卡片组
 
 ### Phase 4 — 进阶
-- [ ] 难度分级
+- [x] 难度分级
 - [ ] 多语言支持
 - [x] 导出/导入词库
-- [ ] PWA / 离线支持
+- [x] PWA / 离线支持
+
+### iOS 构建
+1. `npx cap add ios`
+2. `npx cap sync`
+3. 在 macOS 上用 Xcode 打开 ios/App/App.xcworkspace
+4. 连接 iPhone 或模拟器 → Run
+需要 macOS + Xcode
 
 ## 待做清单
 ### Round 2 — 卡组体验大升级 ✅ 2026-07-21

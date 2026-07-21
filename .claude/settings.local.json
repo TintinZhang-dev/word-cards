@@ -23,7 +23,8 @@
       "Bash(export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64)",
       "Bash(chmod +x gradlew)",
       "Bash(./gradlew assembleDebug)",
-      "Bash(sudo apt-get install -y openjdk-21-jdk)"
+      "Bash(sudo apt-get install -y openjdk-21-jdk)",
+      "Bash(python3 -m json.tool manifest.json)"
     ]
   }
 }

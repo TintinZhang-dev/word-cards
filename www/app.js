@@ -471,6 +471,7 @@ function renderGrid() {
             <button class="delete-btn" data-id="${w.id}" onclick="event.stopPropagation(); deleteWord(${w.id})">🗑️</button>
           </div>
           <div class="word">${escapeHtml(w.word)}</div>
+          ${getDifficultyLabel(rd.difficulty)}
           <button class="card-tts-btn" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word)}')" title="朗读">🔊</button>
           <div class="hint">点击翻转</div>
           <button class="card-info-btn" data-id="${w.id}" onclick="event.stopPropagation(); showCardInfo(${w.id})">ℹ️</button>
@@ -954,16 +955,19 @@ function populateDeckSelect(selectedId) {
 
 // ---- 模态框标签编辑 ----
 let modalEditingTags = [];
+let modalEditingDifficulty = 2;
 
 function openAddModal() {
   editingId = null;
   modalEditingTags = [];
+  modalEditingDifficulty = 2;
   modalTitle.textContent = "添加单词";
   modalWord.value = "";
   modalTranslation.value = "";
   modalDefinition.value = "";
   populateDeckSelect(null);
   renderModalTags();
+  updateModalDifficultyUI();
   modalOverlay.classList.add("show");
   modalWord.focus();
 }
@@ -973,12 +977,14 @@ function openEditModal(id) {
   if (!w) return;
   editingId = id;
   modalEditingTags = [...(w.tags || [])];
+  modalEditingDifficulty = getReviewData(id).difficulty || 2;
   modalTitle.textContent = "编辑单词";
   modalWord.value = w.word;
   modalTranslation.value = w.translation;
   modalDefinition.value = w.definition;
   populateDeckSelect(w.deckId);
   renderModalTags();
+  updateModalDifficultyUI();
   modalOverlay.classList.add("show");
   modalWord.focus();
 }
@@ -1036,6 +1042,19 @@ function removeModalTag(tagId) {
   renderModalTags();
 }
 
+function selectModalDifficulty(diff, el) {
+  modalEditingDifficulty = diff;
+  document.querySelectorAll("#modalDifficultySelector .diff-btn").forEach(b => b.classList.remove("active"));
+  if (el) el.classList.add("active");
+}
+
+function updateModalDifficultyUI() {
+  document.querySelectorAll("#modalDifficultySelector .diff-btn").forEach(b => {
+    b.classList.remove("active");
+    if (parseInt(b.dataset.diff) === modalEditingDifficulty) b.classList.add("active");
+  });
+}
+
 function closeModal() {
   modalOverlay.classList.remove("show");
   editingId = null;
@@ -1074,6 +1093,11 @@ async function addWordWithTags(word, translation, definition, deckId, tagIds) {
     } else {
       words.push({ ...created, deckId: created.deck_id, tags: tagIds });
     }
+    // 保存难度
+    if (created && created.id) {
+      getReviewData(created.id).difficulty = modalEditingDifficulty;
+      saveReviewLocal();
+    }
     saveWordsLocal();
     renderDeckSidebar();
     renderGrid();
@@ -1096,6 +1120,9 @@ async function updateWordWithTags(id, word, translation, definition, deckId, tag
       words[idx].tags = tagIds;
       saveWordsLocal();
     }
+    // 保存难度
+    getReviewData(id).difficulty = modalEditingDifficulty;
+    saveReviewLocal();
     renderDeckSidebar();
     renderGrid();
     renderStats();
@@ -1336,6 +1363,7 @@ function getReviewData(wordId) {
       suspended: false,
       flag: null,
       history: [],
+      difficulty: 2,
     };
   }
   // 兼容旧数据：补默认字段
@@ -1343,7 +1371,23 @@ function getReviewData(wordId) {
   if (rd.suspended === undefined) rd.suspended = false;
   if (rd.flag === undefined) rd.flag = null;
   if (!rd.history) rd.history = [];
+  if (rd.difficulty === undefined) rd.difficulty = 2;
   return rd;
+}
+
+// ---------- 难度标签 ----------
+function getDifficultyLabel(difficulty) {
+  const diff = difficulty || 2;
+  if (diff === 1) return '<div class="card-difficulty diff-easy">😊 简单</div>';
+  if (diff === 3) return '<div class="card-difficulty diff-hard">😰 困难</div>';
+  return '<div class="card-difficulty diff-medium">🤔 中等</div>';
+}
+
+function getDifficultyEmoji(difficulty) {
+  const diff = difficulty || 2;
+  if (diff === 1) return '😊';
+  if (diff === 3) return '😰';
+  return '🤔';
 }
 
 // ---------- 卡片状态标签 ----------
@@ -1413,6 +1457,7 @@ async function fetchDueCards() {
 
   // 从返回数据构建 reviewData
   for (const c of cards) {
+    const existing = reviewData[c.word_id];
     reviewData[c.word_id] = {
       nextReview: c.next_review || null,
       interval: c.interval || 0,
@@ -1421,8 +1466,9 @@ async function fetchDueCards() {
       cardState: c.card_state || "new",
       learningStep: c.learning_step || 0,
       suspended: c.suspended || false,
-      flag: reviewData[c.word_id] ? reviewData[c.word_id].flag : null,
-      history: reviewData[c.word_id] ? (reviewData[c.word_id].history || []) : [],
+      flag: existing ? existing.flag : null,
+      history: existing ? (existing.history || []) : [],
+      difficulty: existing ? (existing.difficulty || 2) : 2,
     };
   }
   return cards;
@@ -1540,6 +1586,16 @@ function calcNextReviewDate(rd) {
   return next.toISOString();
 }
 
+// ---------- 难度系数应用到初始间隔 ----------
+function applyDifficultyToInterval(rd) {
+  const diff = rd.difficulty || 2;
+  if (diff === 1) {
+    rd.interval = Math.max(1, Math.round(rd.interval * 1.5));
+  } else if (diff === 3) {
+    rd.interval = Math.max(1, Math.round(rd.interval * 0.5));
+  }
+}
+
 // ---------- 学习卡片回答逻辑 ----------
 // 返回 true = 放回队列末尾，false = 移除（已毕业或进入下一步）
 function answerLearningCard(wordId, gradeKey) {
@@ -1573,6 +1629,7 @@ function answerLearningCard(wordId, gradeKey) {
       rd.interval = 1;
       rd.reps = 0;
       rd.ef = 2.5;
+      applyDifficultyToInterval(rd);
       rd.nextReview = calcNextReviewDate(rd);
       return false;
     }
@@ -1588,6 +1645,7 @@ function answerLearningCard(wordId, gradeKey) {
       rd.interval = 1;
       rd.reps = 0;
       rd.ef = 2.5;
+      applyDifficultyToInterval(rd);
       rd.nextReview = calcNextReviewDate(rd);
       return false;
     } else if (gradeKey === "easy") {
@@ -1596,6 +1654,7 @@ function answerLearningCard(wordId, gradeKey) {
       rd.interval = 4;
       rd.reps = 0;
       rd.ef = 2.5;
+      applyDifficultyToInterval(rd);
       rd.nextReview = calcNextReviewDate(rd);
       return false;
     }
@@ -2569,6 +2628,26 @@ function renderStatsDistribution() {
       <span class="dist-count">${item.count}</span>
     </div>
   `).join("");
+
+  // 难度分布
+  let easyCount = 0, mediumCount = 0, hardCount = 0;
+  for (const w of words) {
+    const rd = reviewData[w.id];
+    const diff = (rd && rd.difficulty) ? rd.difficulty : 2;
+    if (diff === 1) easyCount++;
+    else if (diff === 3) hardCount++;
+    else mediumCount++;
+  }
+  const diffEl = document.getElementById("statsDifficultyDist");
+  if (diffEl) {
+    diffEl.innerHTML = `
+      <span style="color:#2ecc71;">😊 简单 ${easyCount} 张</span>
+      <span style="margin:0 8px;color:#555;">·</span>
+      <span style="color:#e8c170;">🤔 中等 ${mediumCount} 张</span>
+      <span style="margin:0 8px;color:#555;">·</span>
+      <span style="color:#e74c3c;">😰 困难 ${hardCount} 张</span>
+    `;
+  }
 }
 
 function renderStatsRetention() {
@@ -3795,6 +3874,7 @@ function getBrowserSortedWords(filtered) {
         break;
       }
       case "flag": va = rda.flag || 0; vb = rdb.flag || 0; break;
+      case "difficulty": va = rda.difficulty || 2; vb = rdb.difficulty || 2; break;
       case "status": {
         const sm = { new: 0, learning: 1, review: 2, mastered: 3 };
         va = sm[rda.cardState] || 0; vb = sm[rdb.cardState] || 0;
@@ -3847,6 +3927,7 @@ function renderBrowserView() {
         <td>${deck ? escapeHtml(deck.name) : "-"}</td>
         <td>${wordTags.map(t => `<span class="browser-tag-chip" style="background:${t.color}">${escapeHtml(t.name)}</span>`).join(" ") || "-"}</td>
         <td>${rd.flag ? `<span class="browser-flag-dot" style="background:${['','#e74c3c','#e67e22','#2ecc71','#3498db'][rd.flag]}" onclick="event.stopPropagation();cycleCardFlag(${w.id})" title="${flagEmojis[rd.flag]}"></span>` : `<span class="browser-flag-dot" style="background:transparent;border-color:#333;" onclick="event.stopPropagation();cycleCardFlag(${w.id})" title="设置标记"></span>`}</td>
+        <td style="font-size:1.1rem;text-align:center;">${getDifficultyEmoji(rd.difficulty)}</td>
         <td><span class="card-status ${statusLabel.class}" style="position:static;display:inline-block;">${statusLabel.text}</span>${isSuspended ? '<span class="suspended-badge">🚫</span>' : ''}</td>
         <td style="font-size:0.78rem;color:#888;">${nextReviewStr}</td>
         <td>
@@ -4008,6 +4089,22 @@ function browserBatchUnsuspend() {
   showToast("已恢复选中卡片", "info");
 }
 
+function browserBatchSetDifficulty() {
+  if (browserSelectedCards.size === 0) { showToast("请先选择卡片", "error"); return; }
+  const choice = prompt("设置难度：\n1 = 😊 简单\n2 = 🤔 中等\n3 = 😰 困难\n\n请输入 1、2 或 3：");
+  if (choice === null) return;
+  const diff = parseInt(choice, 10);
+  if (diff !== 1 && diff !== 2 && diff !== 3) { showToast("无效选择，请输入 1、2 或 3", "error"); return; }
+  for (const id of browserSelectedCards) {
+    getReviewData(id).difficulty = diff;
+  }
+  saveReviewLocal();
+  const count = browserSelectedCards.size;
+  browserSelectedCards.clear();
+  renderBrowserView();
+  showToast(`已将 ${count} 张卡片设为${diff === 1 ? '简单' : diff === 3 ? '困难' : '中等'}`, "info");
+}
+
 function setBrowserStatusFilter(status) {
   browserStatusFilter = status;
   browserPage = 1;
@@ -4082,6 +4179,14 @@ function showCardInfo(wordId) {
       <h3>答题历史（最近）</h3>
       ${historyHtml}
     </div>
+    <div class="card-info-section">
+      <h3>📊 难度</h3>
+      <div class="difficulty-selector" id="cardInfoDiffSelector">
+        <button class="diff-btn diff-easy ${rd.difficulty === 1 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 1, this)">😊 简单</button>
+        <button class="diff-btn diff-medium ${(rd.difficulty || 2) === 2 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 2, this)">🤔 中等</button>
+        <button class="diff-btn diff-hard ${rd.difficulty === 3 ? 'active' : ''}" onclick="setCardDifficulty(${wordId}, 3, this)">😰 困难</button>
+      </div>
+    </div>
     <div class="card-info-actions">
       <button onclick="speakWord('${escapeHtml(w.word)}')">🔊 朗读</button>
       <button onclick="rescheduleCard(${wordId})">📅 重排</button>
@@ -4097,6 +4202,21 @@ function showCardInfo(wordId) {
 
 function closeCardInfo() {
   document.getElementById("cardInfoOverlay").classList.remove("show");
+}
+
+function setCardDifficulty(wordId, diff, el) {
+  const rd = getReviewData(wordId);
+  rd.difficulty = diff;
+  saveReviewLocal();
+  // Update button active states
+  const selector = document.getElementById("cardInfoDiffSelector");
+  if (selector) {
+    selector.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("active"));
+  }
+  if (el) el.classList.add("active");
+  if (viewMode === "grid") renderGrid();
+  else renderBrowserView();
+  showToast("难度已更新", "success");
 }
 
 function rescheduleCard(wordId) {
@@ -4118,10 +4238,12 @@ function rescheduleCard(wordId) {
 
 function resetCard(wordId) {
   if (!confirm("确定重置此卡片？所有复习记录将被清除。")) return;
+  const existingDifficulty = reviewData[wordId] ? (reviewData[wordId].difficulty || 2) : 2;
   reviewData[wordId] = {
     nextReview: null, interval: 0, reps: 0, ef: 2.5,
     cardState: "new", learningStep: 0,
     suspended: false, flag: null, history: [],
+    difficulty: existingDifficulty,
   };
   saveReviewLocal();
   closeCardInfo();
