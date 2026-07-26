@@ -113,6 +113,9 @@ const i18n = {
     easyBtn: "超简单",
     reviewComplete: "🎉 复习完成！",
     reviewDoneMsg1: "继续加油，下次一定记得更好！",
+    accuracyLabel: "正确率",
+    loadMore: "加载更多",
+    allLoaded: "全部已加载",
     backToList: "返回卡片列表",
     exitReview: "✕ 退出复习",
     newCardLabel: "🆕 新卡片",
@@ -347,6 +350,9 @@ const i18n = {
     easyBtn: "Easy",
     reviewComplete: "🎉 Review Complete!",
     reviewDoneMsg1: "Keep going, you'll remember better next time!",
+    accuracyLabel: "Accuracy",
+    loadMore: "Load More",
+    allLoaded: "All loaded",
     backToList: "Back to List",
     exitReview: "✕ Exit Review",
     newCardLabel: "🆕 New",
@@ -597,6 +603,8 @@ let browserPage = 1;
 const BROWSER_PAGE_SIZE = 50;
 let suspendedFilter = false;
 let flagFilter = null;  // null | 1 | 2 | 3 | 4
+let browserDisplayLimit = 100;  // 大批量分批显示的已加载数量
+let browserIsLoadingMore = false;  // 标记是否正在「加载更多」
 
 // ---- 撤销栈 ----
 let undoStack = [];
@@ -2482,10 +2490,16 @@ function finishReview() {
       gradeDistribution.easy  > 0 ? `${t('easyBtn')} ${gradeDistribution.easy}`   : "",
     ].filter(Boolean).join(" · ");
 
+    const correct = gradeDistribution.good + gradeDistribution.easy;
+    const total = gradeDistribution.again + gradeDistribution.hard + gradeDistribution.good + gradeDistribution.easy;
+    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const accuracyColor = accuracy >= 90 ? "#2ecc71" : (accuracy < 70 ? "#e67e22" : "");
+
     reviewSummary.innerHTML = `
       <div class="summary-line">📊 ${t('review')} <strong>${reviewSessionCount}</strong> ${t('cards')}</div>
       <div class="summary-line">⏱️ ${timeStr}</div>
       <div class="summary-line">${distText}</div>
+      <div class="summary-line">✅ ${t('accuracyLabel')} <span${accuracyColor ? ' style="color:' + accuracyColor + ';font-weight:bold;"' : ''}>${accuracy}%</span></div>
       <div class="summary-line">${t('masteredLabel')} ${mastered}/${allCards} ${t('cards')}${streakCount > 1 ? ` 🔥 ${t('streakLabel')} ${streakCount} ${t('days')}` : ""}</div>
     `;
   }
@@ -4448,17 +4462,31 @@ function getBrowserSortedWords(filtered) {
 function renderBrowserView() {
   const filtered = getBrowserFilteredWords();
   const sorted = getBrowserSortedWords(filtered);
-  const totalPages = Math.ceil(sorted.length / BROWSER_PAGE_SIZE) || 1;
-  if (browserPage > totalPages) browserPage = totalPages;
-  const start = (browserPage - 1) * BROWSER_PAGE_SIZE;
-  const pageItems = sorted.slice(start, start + BROWSER_PAGE_SIZE);
+
+  const useBatching = sorted.length > 200;
+  // 非「加载更多」触发的渲染，重置分批数量
+  if (!browserIsLoadingMore) {
+    browserDisplayLimit = 100;
+  }
+
+  let displayItems, displayLimit;
+  if (useBatching) {
+    displayLimit = browserDisplayLimit;
+    displayItems = sorted.slice(0, displayLimit);
+  } else {
+    const totalPages = Math.ceil(sorted.length / BROWSER_PAGE_SIZE) || 1;
+    if (browserPage > totalPages) browserPage = totalPages;
+    const start = (browserPage - 1) * BROWSER_PAGE_SIZE;
+    displayLimit = sorted.length;
+    displayItems = sorted.slice(start, start + BROWSER_PAGE_SIZE);
+  }
 
   const tbody = document.getElementById("browserTableBody");
   if (!tbody) return;
 
   const flagEmojis = { 1: "🔴", 2: "🟠", 3: "🟢", 4: "🔵" };
 
-  tbody.innerHTML = pageItems.map(w => {
+  tbody.innerHTML = displayItems.map(w => {
     const rd = getReviewData(w.id);
     const wordTags = (w.tags || []).map(tid => tags.find(tg => tg.id === tid)).filter(Boolean);
     const deck = decks.find(d => d.id === w.deckId);
@@ -4493,8 +4521,14 @@ function renderBrowserView() {
     `;
   }).join("");
 
-  // 更新分页
-  renderBrowserPagination(totalPages);
+  // 更新分页或加载更多
+  if (useBatching) {
+    renderBrowserLoadMore(sorted.length, displayLimit);
+  } else {
+    const totalPages = Math.ceil(sorted.length / BROWSER_PAGE_SIZE) || 1;
+    if (browserPage > totalPages) browserPage = totalPages;
+    renderBrowserPagination(totalPages);
+  }
   // 更新排序表头
   updateSortHeaderUI();
   // 更新批量操作
@@ -4516,6 +4550,25 @@ function renderBrowserPagination(totalPages) {
   el.innerHTML = html;
 }
 
+function renderBrowserLoadMore(total, loaded) {
+  const el = document.getElementById("browserPagination");
+  if (!el) return;
+  if (loaded >= total) {
+    el.innerHTML = `<div class="summary-line" style="text-align:center;color:#888;">${t('allLoaded')}</div>`;
+    return;
+  }
+  el.innerHTML = `<button class="load-more-btn" onclick="loadMoreCards()">${t('loadMore')} (${loaded}/${total})</button>`;
+}
+
+function loadMoreCards() {
+  const filtered = getBrowserFilteredWords();
+  const sorted = getBrowserSortedWords(filtered);
+  browserDisplayLimit = Math.min(browserDisplayLimit + 100, sorted.length);
+  browserIsLoadingMore = true;
+  renderBrowserView();
+  browserIsLoadingMore = false;
+}
+
 function browserGoPage(page) {
   browserPage = page;
   renderBrowserView();
@@ -4524,8 +4577,14 @@ function browserGoPage(page) {
 function browserToggleSelectAll() {
   const filtered = getBrowserFilteredWords();
   const sorted = getBrowserSortedWords(filtered);
-  const start = (browserPage - 1) * BROWSER_PAGE_SIZE;
-  const pageItems = sorted.slice(start, start + BROWSER_PAGE_SIZE);
+  const useBatching = sorted.length > 200;
+  let pageItems;
+  if (useBatching) {
+    pageItems = sorted.slice(0, browserDisplayLimit);
+  } else {
+    const start = (browserPage - 1) * BROWSER_PAGE_SIZE;
+    pageItems = sorted.slice(start, start + BROWSER_PAGE_SIZE);
+  }
   const allSelected = pageItems.every(w => browserSelectedCards.has(w.id));
   if (allSelected) {
     pageItems.forEach(w => browserSelectedCards.delete(w.id));
