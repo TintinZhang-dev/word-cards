@@ -116,6 +116,20 @@ const i18n = {
     accuracyLabel: "正确率",
     loadMore: "加载更多",
     allLoaded: "全部已加载",
+    // 拼写模式
+    spellingMode: "✍️ 拼写模式",
+    spellingPlaceholder: "在此输入单词...",
+    spellingSubmit: "提交",
+    spellingCorrect: "✅ 正确！",
+    spellingWrong: "❌ 不对，正确答案是：",
+    spellingNext: "下一个",
+    spellingExit: "退出拼写",
+    spellingTypeAnswer: "输入答案",
+    spellingScore: "拼写正确率",
+    spellingNoCards: "🥳 没有待拼写的卡片",
+    spellingWrongGrade: "✗ 记错",
+    spellingCorrectGrade: "✓ 记住了",
+    spellingSummary: "拼写统计",
     backToList: "返回卡片列表",
     exitReview: "✕ 退出复习",
     newCardLabel: "🆕 新卡片",
@@ -353,6 +367,20 @@ const i18n = {
     accuracyLabel: "Accuracy",
     loadMore: "Load More",
     allLoaded: "All loaded",
+    // Spelling mode
+    spellingMode: "✍️ Spelling Mode",
+    spellingPlaceholder: "Type the word...",
+    spellingSubmit: "Submit",
+    spellingCorrect: "✅ Correct!",
+    spellingWrong: "❌ Wrong. The answer is:",
+    spellingNext: "Next",
+    spellingExit: "Exit Spelling",
+    spellingTypeAnswer: "Type your answer",
+    spellingScore: "Spelling Accuracy",
+    spellingNoCards: "🥳 No cards to spell!",
+    spellingWrongGrade: "✗ Missed",
+    spellingCorrectGrade: "✓ Got it",
+    spellingSummary: "Spelling Results",
     backToList: "Back to List",
     exitReview: "✕ Exit Review",
     newCardLabel: "🆕 New",
@@ -1664,6 +1692,15 @@ let reviewSessionCount = 0; // 本次复习完成的卡片数
 let reviewStartTime = null; // 复习开始时间
 let gradeDistribution = { again: 0, hard: 0, good: 0, easy: 0 }; // 评分分布
 let pendingReviewTip = ""; // 下一张卡片提示
+
+// ---- 拼写模式状态 ----
+let spellingMode = false;           // 是否在拼写模式
+let spellingQueue = [];             // 拼写队列（word ID 数组）
+let spellingIndex = 0;              // 当前位置
+let spellingCorrectCount = 0;       // 本轮正确数
+let spellingWrongCount = 0;         // 本轮错误数
+let spellingAnsweredWords = new Set(); // 本轮已答的词（用于去重）
+
 let settings = { newCardsPerDay: 10, reviewCardsPerDay: 50, deckOverrides: {}, defLang: "zh-CN", uiLang: "zh" };
 
 // ---- i18n 翻译函数 ----
@@ -2221,6 +2258,226 @@ function exitReviewMode() {
   updateDueBadge();
   if (viewMode === "grid") renderGrid();
   else { browserPage = 1; renderBrowserView(); }
+}
+
+// ══════════════════════════════════════
+//  拼写模式 (Spelling Mode)
+// ══════════════════════════════════════
+
+function enterSpellingMode() {
+  spellingMode = true;
+
+  // 构建拼写队列：选取学习中的 + 待复习的卡片（排除已掌握 & 挂起）
+  const candidates = words.filter(w => {
+    const rd = getReviewData(w.id);
+    if (rd.suspended) return false;
+    if (rd.cardState === "mastered") return false;
+    return true;
+  });
+
+  if (candidates.length === 0) {
+    showToast(t("spellingNoCards"), "info");
+    return;
+  }
+
+  // 打乱顺序
+  spellingQueue = shuffleArray(candidates.map(w => w.id));
+  spellingIndex = 0;
+  spellingCorrectCount = 0;
+  spellingWrongCount = 0;
+  spellingAnsweredWords = new Set();
+
+  // 隐藏主界面，显示拼写容器
+  document.querySelector("main").style.display = "none";
+  document.querySelector("footer").style.display = "none";
+  const container = document.getElementById("spellingContainer");
+  if (container) container.style.display = "block";
+
+  showSpellingCard();
+}
+
+function showSpellingCard() {
+  if (spellingIndex >= spellingQueue.length) {
+    exitSpellingMode();
+    return;
+  }
+
+  const wordId = spellingQueue[spellingIndex];
+  const w = words.find(w => w.id === wordId);
+  if (!w) {
+    spellingIndex++;
+    showSpellingCard();
+    return;
+  }
+
+  // 更新进度
+  const countEl = document.getElementById("spellingCount");
+  if (countEl) countEl.textContent = `${spellingIndex + 1}/${spellingQueue.length}`;
+
+  // 显示翻译和定义
+  const transEl = document.getElementById("spellingTranslation");
+  const defEl = document.getElementById("spellingDefinition");
+  if (transEl) transEl.textContent = w.translation || "";
+  if (defEl) defEl.textContent = w.definition || "";
+
+  // 清空输入框和反馈
+  const inputEl = document.getElementById("spellingInput");
+  const feedbackEl = document.getElementById("spellingFeedback");
+  const gradeBtns = document.getElementById("spellingGradeButtons");
+  const nextBtn = document.getElementById("spellingNextBtn");
+  const submitBtn = document.getElementById("spellingSubmitBtn");
+
+  if (inputEl) { inputEl.value = ""; inputEl.disabled = false; inputEl.focus(); }
+  if (feedbackEl) { feedbackEl.textContent = ""; feedbackEl.className = "spelling-feedback"; }
+  if (gradeBtns) gradeBtns.style.display = "none";
+  if (nextBtn) nextBtn.style.display = "none";
+  if (submitBtn) submitBtn.style.display = "inline-block";
+}
+
+function submitSpellingAnswer() {
+  if (spellingIndex >= spellingQueue.length) return;
+
+  const wordId = spellingQueue[spellingIndex];
+  const w = words.find(w => w.id === wordId);
+  if (!w) return;
+
+  const inputEl = document.getElementById("spellingInput");
+  const feedbackEl = document.getElementById("spellingFeedback");
+  const gradeBtns = document.getElementById("spellingGradeButtons");
+  const nextBtn = document.getElementById("spellingNextBtn");
+  const submitBtn = document.getElementById("spellingSubmitBtn");
+
+  const userAnswer = (inputEl?.value || "").trim().toLowerCase();
+  const correctAnswer = (w.word || "").trim().toLowerCase();
+
+  if (userAnswer === correctAnswer) {
+    // ✅ 正确
+    spellingCorrectCount++;
+    if (feedbackEl) {
+      feedbackEl.textContent = t("spellingCorrect");
+      feedbackEl.className = "spelling-feedback correct";
+    }
+    if (gradeBtns) gradeBtns.style.display = "flex";
+    if (nextBtn) nextBtn.style.display = "none";
+    if (submitBtn) submitBtn.style.display = "none";
+    if (inputEl) inputEl.disabled = true;
+  } else {
+    // ❌ 错误
+    spellingWrongCount++;
+    if (feedbackEl) {
+      feedbackEl.textContent = `${t("spellingWrong")} ${w.word}`;
+      feedbackEl.className = "spelling-feedback wrong";
+    }
+    if (gradeBtns) gradeBtns.style.display = "none";
+    if (nextBtn) nextBtn.style.display = "inline-block";
+    if (submitBtn) submitBtn.style.display = "none";
+    if (inputEl) inputEl.disabled = true;
+
+    // 拼错自动计为 again
+    const rd = getReviewData(wordId);
+    const prevState = rd.cardState;
+    sm2(rd, 0); // grade = again
+    rd.nextReview = calcNextReviewDate(rd);
+    rd.cardState = rd.cardState === "mastered" ? "review" : rd.cardState;
+    // 把当前词放回队列末尾（稍后再试）
+    spellingQueue.push(wordId);
+
+    // 记录答题历史
+    if (!rd.history) rd.history = [];
+    rd.history.unshift({ date: new Date().toISOString(), gradeKey: "again", state: prevState });
+    if (rd.history.length > 20) rd.history = rd.history.slice(0, 20);
+
+    gradeDistribution["again"] = (gradeDistribution["again"] || 0) + 1;
+    saveReviewLocal();
+    DataLayer.answerCard(wordId, "again").catch(err => console.error("spelling answerCard API error:", err));
+  }
+
+  spellingAnsweredWords.add(wordId);
+}
+
+function handleSpellingGrade(grade) {
+  // grade: "correct" → good, "wrong" → again
+  if (spellingIndex >= spellingQueue.length) return;
+
+  const wordId = spellingQueue[spellingIndex];
+  const rd = getReviewData(wordId);
+  const prevState = rd.cardState;
+
+  const gradeKey = grade === "correct" ? "good" : "again";
+
+  // 记录答题历史
+  if (!rd.history) rd.history = [];
+  rd.history.unshift({ date: new Date().toISOString(), gradeKey, state: prevState });
+  if (rd.history.length > 20) rd.history = rd.history.slice(0, 20);
+
+  if (grade === "correct") {
+    const g = GRADE_MAP["good"];
+    sm2(rd, g);
+    rd.nextReview = calcNextReviewDate(rd);
+    if (rd.reps >= 3 && rd.interval >= 21) {
+      rd.cardState = "mastered";
+    } else {
+      rd.cardState = rd.cardState === "new" ? "learning" : (rd.cardState === "learning" ? "review" : rd.cardState);
+    }
+    gradeDistribution["good"] = (gradeDistribution["good"] || 0) + 1;
+  } else {
+    // 用户拼对了但自评不熟 → SM-2 again，重新放入队列
+    sm2(rd, 0);
+    rd.nextReview = calcNextReviewDate(rd);
+    rd.cardState = rd.cardState === "mastered" ? "review" : rd.cardState;
+    spellingQueue.push(wordId); // 重新放回队列末尾
+    gradeDistribution["again"] = (gradeDistribution["again"] || 0) + 1;
+    // 注意：不改变 spellingCorrectCount / spellingWrongCount，因为用户输入是正确拼写
+  }
+
+  saveReviewLocal();
+  DataLayer.answerCard(wordId, gradeKey).catch(err => console.error("spelling grade API error:", err));
+
+  // 移动到下一张
+  spellingIndex++;
+  showSpellingCard();
+}
+
+function exitSpellingMode() {
+  spellingMode = false;
+
+  const container = document.getElementById("spellingContainer");
+  if (container) container.style.display = "none";
+  document.querySelector("main").style.display = "";
+  document.querySelector("footer").style.display = "";
+
+  const total = spellingCorrectCount + spellingWrongCount;
+  if (total > 0) {
+    const acc = Math.round((spellingCorrectCount / total) * 100);
+    const accColor = acc >= 90 ? "#2ecc71" : (acc < 70 ? "#e67e22" : "");
+    showToast(
+      `${t("spellingSummary")}: ✅ ${spellingCorrectCount} / ❌ ${spellingWrongCount} | ${t("spellingScore")} ${acc}%`,
+      "info"
+    );
+  }
+
+  // 清理
+  spellingQueue = [];
+  spellingIndex = 0;
+  updateDueBadge();
+  renderStats();
+  if (viewMode === "grid") renderGrid();
+  else { browserPage = 1; renderBrowserView(); }
+}
+
+function goToNextSpelling() {
+  spellingIndex++;
+  showSpellingCard();
+}
+
+// Fisher-Yates shuffle
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 function updateQueueStats() {
@@ -5339,6 +5596,35 @@ function setupRound2Events() {
   if (chartSection) {
     // 原有周期切换 event listener 保留（在初始化时已绑定）
   }
+
+  // ---- 拼写模式事件绑定 ----
+  const spellingModeBtn = document.getElementById("spellingModeBtn");
+  if (spellingModeBtn) spellingModeBtn.addEventListener("click", enterSpellingMode);
+
+  const spellingSubmitBtn = document.getElementById("spellingSubmitBtn");
+  if (spellingSubmitBtn) spellingSubmitBtn.addEventListener("click", submitSpellingAnswer);
+
+  const spellingInput = document.getElementById("spellingInput");
+  if (spellingInput) {
+    spellingInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitSpellingAnswer();
+      }
+    });
+  }
+
+  const spellingExitBtn = document.getElementById("spellingExitBtn");
+  if (spellingExitBtn) spellingExitBtn.addEventListener("click", exitSpellingMode);
+
+  const spellingNextBtn = document.getElementById("spellingNextBtn");
+  if (spellingNextBtn) spellingNextBtn.addEventListener("click", goToNextSpelling);
+
+  const spellingWrongGrade = document.getElementById("spellingWrongGrade");
+  if (spellingWrongGrade) spellingWrongGrade.addEventListener("click", () => handleSpellingGrade("wrong"));
+
+  const spellingCorrectGrade = document.getElementById("spellingCorrectGrade");
+  if (spellingCorrectGrade) spellingCorrectGrade.addEventListener("click", () => handleSpellingGrade("correct"));
 }
 
 // ---------- 启动 ----------

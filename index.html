@@ -27,6 +27,7 @@
     <div class="toolbar">
       <button id="addBtn" data-i18n="addWord">＋ 添加单词</button>
       <button id="reviewBtn" data-i18n="startReview">📋 开始复习</button>
+      <button id="spellingModeBtn" class="btn-primary" data-i18n="spellingMode">✍️ 拼写模式</button>
       <button id="browserToggleBtn" data-i18n="toggleBrowser">📋 列表</button>
       <button id="statsBtn" data-i18n="stats">📊 统计</button>
       <button id="settingsBtn" data-i18n="settings">⚙️</button>
@@ -350,6 +351,33 @@
         <h2 data-i18n="reviewComplete">复习完成！</h2>
         <p id="reviewSummary"></p>
         <button class="review-back-btn" id="reviewBackBtn" data-i18n="backToList">返回卡片列表</button>
+      </div>
+    </div>
+
+    <!-- 拼写模式容器 -->
+    <div id="spellingContainer" class="review-container" style="display:none">
+      <div class="review-top-bar">
+        <span id="spellingCount">1/10</span>
+        <div class="review-controls">
+          <button id="spellingNextBtn" class="btn-cancel" style="display:none">下一个</button>
+          <button id="spellingExitBtn" class="btn-cancel">退出</button>
+        </div>
+      </div>
+
+      <div class="spelling-card" id="spellingCard">
+        <div class="spelling-front">
+          <div class="spelling-translation" id="spellingTranslation"></div>
+          <div class="spelling-definition" id="spellingDefinition"></div>
+        </div>
+        <div class="spelling-input-area">
+          <input type="text" id="spellingInput" class="spelling-input" placeholder="在此输入单词..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+          <button id="spellingSubmitBtn" class="btn-primary">提交</button>
+        </div>
+        <div id="spellingFeedback" class="spelling-feedback"></div>
+        <div class="spelling-grade-buttons" id="spellingGradeButtons" style="display:none">
+          <button class="grade-btn grade-wrong" id="spellingWrongGrade">✗ 记错</button>
+          <button class="grade-btn grade-correct" id="spellingCorrectGrade">✓ 记住了</button>
+        </div>
       </div>
     </div>
 

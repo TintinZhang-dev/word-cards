@@ -2501,3 +2501,112 @@ footer {
 .card-difficulty.diff-easy { color: #2ecc71; }
 .card-difficulty.diff-medium { color: #e8c170; }
 .card-difficulty.diff-hard { color: #e74c3c; }
+
+/* ---- 拼写模式 ---- */
+.spelling-card {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 40px 30px;
+  background: #1e1e3a;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.spelling-translation {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #e0e0ff;
+}
+
+.spelling-definition {
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 30px;
+  line-height: 1.5;
+  min-height: 1.5em;
+}
+
+.spelling-input-area {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.spelling-input {
+  padding: 12px 18px;
+  font-size: 1.2rem;
+  border: 2px solid #3a3a6e;
+  border-radius: 10px;
+  background: #16162e;
+  color: #e0e0ff;
+  width: 260px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.spelling-input:focus {
+  border-color: #4a9eff;
+}
+
+.spelling-input:disabled {
+  opacity: 0.5;
+}
+
+.spelling-feedback {
+  font-size: 1.2rem;
+  margin: 16px 0;
+  min-height: 2em;
+}
+
+.spelling-feedback.correct { color: #2ecc71; }
+.spelling-feedback.wrong { color: #e74c3c; }
+
+.spelling-grade-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.grade-btn.grade-wrong {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.grade-btn.grade-wrong:hover { opacity: 0.85; }
+
+.grade-btn.grade-correct {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.grade-btn.grade-correct:hover { opacity: 0.85; }
+
+/* 拼写模式顶部栏复用 review-top-bar */
+.review-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.review-controls {
+  display: flex;
+  gap: 8px;
+}
