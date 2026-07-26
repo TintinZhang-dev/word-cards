@@ -709,6 +709,25 @@ async function init() {
   loadSettings();
   updateUserStatus();
 
+  // ---- 欢迎横幅（首次使用）----
+  const welcomeBanner = document.getElementById("welcomeBanner");
+  if (welcomeBanner && !settings.welcomeDismissed) {
+    welcomeBanner.style.display = "flex";
+    document.getElementById("welcomeStartBtn")?.addEventListener("click", () => {
+      settings.welcomeDismissed = true;
+      saveSettingsData();
+      welcomeBanner.style.opacity = "0";
+      welcomeBanner.style.transition = "opacity 0.3s";
+      setTimeout(() => { welcomeBanner.style.display = "none"; }, 300);
+    });
+    document.getElementById("welcomeDismissCheck")?.addEventListener("change", function () {
+      if (this.checked) {
+        settings.welcomeDismissed = true;
+        saveSettingsData();
+      }
+    });
+  }
+
   // 登录/退出按钮事件
   const headerLoginBtn = document.getElementById("headerLoginBtn");
   const headerLogoutBtn = document.getElementById("headerLogoutBtn");
@@ -779,6 +798,23 @@ async function initApp() {
     // 计算 nextId
     nextId = words.length > 0 ? Math.max(...words.map(w => w.id)) + 1 : 1;
     nextDeckId = decks.length > 0 ? Math.max(...decks.map(d => d.id)) + 1 : 1;
+
+    // 首次使用：加载默认词包
+    if (words.length === 0) {
+      decks = [...DEFAULT_DECKS];
+      words = DEFAULT_WORDS.map(dw => ({
+        id: dw.id,
+        word: dw.word,
+        translation: dw.translation,
+        definition: dw.definition,
+        deckId: dw.deckId,
+      }));
+      nextId = Math.max(...words.map(w => w.id)) + 1;
+      nextDeckId = Math.max(...decks.map(d => d.id)) + 1;
+      saveWordsLocal();
+      saveDecksLocal();
+      console.log(`📚 已加载默认词包 (${words.length} words, ${decks.length} decks)`);
+    }
 
     // 加载复习数据
     reviewData = {};

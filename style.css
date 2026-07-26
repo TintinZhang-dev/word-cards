@@ -2610,3 +2610,82 @@ footer {
   display: flex;
   gap: 8px;
 }
+
+/* ---- 欢迎横幅 / Landing Page ---- */
+.welcome-banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  transition: opacity 0.3s;
+}
+
+.welcome-content {
+  background: #1e1e3a;
+  border-radius: 16px;
+  padding: 32px 40px;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+}
+
+.welcome-content h2 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  color: #e0e0ff;
+}
+
+.welcome-content > p {
+  margin: 0 0 24px;
+  color: #888;
+  font-size: 0.95rem;
+}
+
+.welcome-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.welcome-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ccc;
+  font-size: 0.95rem;
+}
+
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2a2a5e;
+  color: #4a9eff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.welcome-dismiss {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #888;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.welcome-dismiss input {
+  cursor: pointer;
+}
+
+#welcomeStartBtn {
+  padding: 12px 36px;
+  font-size: 1.1rem;
+}
